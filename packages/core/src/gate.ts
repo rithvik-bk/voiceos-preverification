@@ -29,7 +29,7 @@ import { PreflightBlock, requiredText } from './block.ts';
 import type { GroundingStore } from './grounding.ts';
 import { licensingDescriptor } from './licensing.ts';
 import { assertCoClausal, parseWordIndices, type RoutingSpanRef } from './misbinding.ts';
-import { bestRank, minRankFor, textHash, type ParamClass, type Source } from './provenance.ts';
+import { bestRank, minRankForRouting, textHash, type ParamClass, type Source } from './provenance.ts';
 import { candidateSummary, resolveTarget, type Target } from './resolve.ts';
 import { attributeToTranscript, transcriptSource, type FinalizedTranscript } from './transcript.ts';
 
@@ -194,8 +194,8 @@ export function preflight(call: ToolCall, contract: ToolContract, store: Groundi
     }
 
     const receipt = present
-      ? gateRoutingParam(name, spec, value, transcript, store)
-      : gateRoutingParamArgsOnly(name, spec, value, store);
+      ? gateRoutingParam(name, spec, value, transcript, store, contract.tier)
+      : gateRoutingParamArgsOnly(name, spec, value, store, contract.tier);
     params[name] = receipt;
 
     // Collect the licensing span for the misbinding pass (transcript-present only).
@@ -248,6 +248,7 @@ function gateRoutingParam(
   spoken: string,
   transcript: FinalizedTranscript,
   store: GroundingStore,
+  tier: 1 | 2 | 3,
 ): ParamReceipt {
   // Amount slots do not resolve against the target pool — they resolve against the spoken
   // number-set (number-twin, check #3). Handled entirely by transcript attribution.
@@ -292,7 +293,10 @@ function gateRoutingParam(
     if (license !== null) sources.unshift(transcriptSource(license.spans, license.descriptor));
   }
 
-  const required = minRankFor('routing');
+  // Tier-aware lattice floor (§1 × §5): Tier-3/Tier-2 routing demands rank ≥ 3; a Tier-1 read is
+  // fail-open on rank (resolution to a real target is its safety, S5.1/S19.2). This floor is
+  // SEPARATE from — and never weakens — the Tier-3 destination/amount/permission firewall below.
+  const required = minRankForRouting(tier);
   if (groundingSource.rank < required) {
     throw new PreflightBlock('insufficient_provenance', {
       param: name,
@@ -391,6 +395,7 @@ function gateRoutingParamArgsOnly(
   spec: ParamSpec,
   spoken: string,
   store: GroundingStore,
+  tier: 1 | 2 | 3,
 ): ParamReceipt {
   if (spec.slot === 'amount') {
     // No transcript ⇒ no spoken number-set to check against. Args-only cannot ground an amount.
@@ -420,7 +425,7 @@ function gateRoutingParamArgsOnly(
     throw new PreflightBlock('target_not_found', { param: name, query: spoken, candidates: [] });
   }
 
-  const required = minRankFor('routing');
+  const required = minRankForRouting(tier);
   if (groundingSource.rank < required) {
     throw new PreflightBlock('insufficient_provenance', {
       param: name,

@@ -6,6 +6,7 @@ export {
   RANK,
   MIN_RANK,
   minRankFor,
+  minRankForRouting,
   bestRank,
   textHash,
   type Source,

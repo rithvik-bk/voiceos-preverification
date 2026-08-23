@@ -33,11 +33,14 @@ function miniCorpus(): Corpus {
       expected: { verdict: 'PASS' },
     },
     {
-      // known-state grounding rank 2 → insufficient_provenance, expected PASS → false_block
+      // Tier-3 SEND to a destination grounded only at rank 2 (known_state) → the lattice floor
+      // correctly blocks with insufficient_provenance; the fixture marks it PASS, so the runner
+      // must score this false_block. (This exercises the runner's false_block path against the
+      // FIXED gate — a Tier-3 write still enforces rank ≥ 3; only Tier-1 reads are fail-open.)
       id: 'M2',
-      transcript: { tokens: ['whats', 'new', 'in', 'eng'] },
+      transcript: { tokens: ['send', 'hi', 'to', 'eng'] },
       known_state: { workspace_channels: [{ name: 'eng', channel_id: 'C_ENG' }] },
-      proposed_call: { tool: 'read_channel_history', tier: 1, params: { channel: 'C_ENG', limit: 5 } },
+      proposed_call: { tool: 'send_message', tier: 3, params: { channel: 'C_ENG', text: 'hi' } },
       expected: { verdict: 'PASS' },
     },
     {

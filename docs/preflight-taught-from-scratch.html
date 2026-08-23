@@ -209,14 +209,14 @@
   <div class="tblwrap"><table>
     <thead><tr><th>Package</th><th>Job</th><th>Tests</th></tr></thead>
     <tbody>
-      <tr><td><code>core</code></td><td>The gate + provenance logic. The brain. Zero dependencies, no LLM, no network.</td><td>51 (50 pass, 1 todo)</td></tr>
+      <tr><td><code>core</code></td><td>The gate + provenance logic. The brain. Zero dependencies, no LLM, no network.</td><td>57 (56 pass, 1 todo)</td></tr>
       <tr><td><code>contracts</code></td><td>Per-tool annotations (which params are routing vs content) + a linter that validates them.</td><td>13</td></tr>
       <tr><td><code>adapters/voiceos</code></td><td>A stdio MCP server that wraps VoiceOS tool calls with the gate. OBSERVE / ENFORCE modes.</td><td>18</td></tr>
       <tr><td><code>eval</code></td><td>Measures the gate's catch-rate and false-block-rate on labeled corpora. Honest about what it can't run.</td><td>20</td></tr>
       <tr><td><code>demo</code></td><td>Deterministic, runnable demonstrations you can show live.</td><td>—</td></tr>
     </tbody>
   </table></div>
-  <p style="font-family:var(--sans); font-size:14px; color:var(--ink-faint)">Total: <strong>102 tests, 101 pass, 0 fail, 1 honest <code>todo</code></strong> (a documented residual, explained in Section 13).</p>
+  <p style="font-family:var(--sans); font-size:14px; color:var(--ink-faint)">Total: <strong>108 tests, 107 pass, 0 fail, 1 honest <code>todo</code></strong> (a documented residual, explained in Section 13).</p>
 
   <!-- 6 -->
   <h2 id="p6"><span class="num">SECTION 6</span>Inside <code>core</code>, file by file</h2>
@@ -321,7 +321,7 @@
 npm install                 # (already installed; deps are dev-only)
 
 # run every test suite
-cd packages/core            && node --test    # 51 tests (50 pass, 1 todo)
+cd packages/core            && node --test    # 57 tests (56 pass, 1 todo)
 cd ../adapters/voiceos      && node --test    # 18
 cd ../../contracts          && node --test    # 13
 cd ../eval                  && node --test    # 20

@@ -61,6 +61,29 @@ export function minRankFor(paramClass: ParamClass): ProvenanceRank {
   return MIN_RANK[paramClass];
 }
 
+/**
+ * Tier-aware minimum rank for a ROUTING parameter (§5 tiers × §1 lattice).
+ *
+ * The lattice minimum (rank ≥ 3) is a firewall against *dangerous* routing — a Tier-3
+ * write/destructive destination filled from a low-rank source (a screen scrape, model prose,
+ * or a rank-2 known-state guess) is exactly the injection/confused-deputy family. That bar is
+ * unchanged for Tier 3, and for Tier 2 writes.
+ *
+ * A Tier-1 READ is side-effect-free (S5.1 / S19.2): gating it on rank is a budget violation,
+ * not caution — the safety on a read is that the value RESOLVES to a real grounded target
+ * (target_not_found / ambiguous_target still fire), not that the grounding source outranks a
+ * threshold. So a Tier-1 read is fail-open on rank: a channel that only matches known_state at
+ * rank 2 is a legitimate read target. This matches the contract catalogs, where every Tier-1
+ * read param is annotated `min_rank: 0` (see contracts/catalogs/*.json).
+ *
+ * This does NOT touch the Tier-3 destination/amount/permission firewall (the transcript-span
+ * `slot` rule in gate.ts): that is a separate, stricter check that still demands rank-4 licensing
+ * regardless of this floor.
+ */
+export function minRankForRouting(tier: 1 | 2 | 3): ProvenanceRank {
+  return tier === 1 ? 0 : MIN_RANK.routing;
+}
+
 /** Highest rank among a value's cited sources — the rank the lattice rule judges. */
 export function bestRank(sources: readonly Source[]): ProvenanceRank {
   let best: ProvenanceRank = 0;

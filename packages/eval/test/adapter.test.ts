@@ -169,7 +169,10 @@ test('RRP does not license a body-sourced id: the free_text injection stays bloc
   assert.equal(verdict.code, 'provenance_mismatch');
 });
 
-test('known-state grounding carries rank 2 and cannot license routing (tier-blind lattice, pinned)', () => {
+test('tier-aware floor (B38 / S5.1): a Tier-1 read on a rank-2 known_state channel auto-fires (PASS)', () => {
+  // AUDIT finding #2: this is exactly B38. A Tier-1 read is fail-open on rank — the safety is that
+  // the channel RESOLVES to a real grounded target, not that its grounding source outranks 3.
+  // Before the tier-aware floor this false-blocked with insufficient_provenance.
   const corpusCase = baseCase({
     prior_tool_outputs: [],
     known_state: { identity: 'U_ME', workspace_channels: [{ name: 'eng', channel_id: 'C_ENG' }] },
@@ -183,7 +186,10 @@ test('known-state grounding carries rank 2 and cannot license routing (tier-blin
   );
   const { call, contract, store } = buildGateInput(corpusCase);
   const verdict = runGate(call, contract, store);
-  assert.equal(verdict.verdict, 'block');
-  assert.ok(verdict.verdict === 'block');
-  assert.equal(verdict.code, 'insufficient_provenance'); // S5.1 Tier-1 auto-fire does not exist yet
+  assert.equal(verdict.verdict, 'pass', 'a Tier-1 read matching known_state at rank 2 must not be gated');
+  assert.ok(verdict.verdict === 'pass');
+  // It passed on the rank-2 known_state source — the floor dropped for the read, not the firewall.
+  const channel = verdict.receipt.params['channel']!;
+  assert.equal(channel.resolved?.id, 'C_ENG');
+  assert.ok(channel.sources.some((s) => s.kind === 'known_state' && s.rank === 2));
 });
