@@ -1,0 +1,368 @@
+<title>Preflight, From Scratch</title>
+<style>
+  :root{
+    --paper:#F5F1E7; --paper-2:#EEE8DA; --card:#FBF8F1;
+    --ink:#1B1813; --ink-soft:#4A453B; --ink-faint:#8A8272;
+    --rule:#D8CFBB;
+    --pass:#3F6B4A; --pass-bg:#E6EEE4;
+    --block:#A63B27; --block-bg:#F3E2DC;
+    --hold:#B07A16; --hold-bg:#F4E9CE;
+    --accent:#2E4A5A; --accent-bg:#E2E9EC;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%; scroll-behavior:smooth}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--serif); font-size:19px; line-height:1.62; -webkit-font-smoothing:antialiased}
+  .wrap{max-width:780px; margin:0 auto; padding:0 24px 140px}
+  header.hero{max-width:780px; margin:0 auto; padding:76px 24px 30px}
+  .eyebrow{font-family:var(--sans); font-size:12.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 18px}
+  h1{font-size:clamp(36px,6vw,56px); line-height:1.04; letter-spacing:-.01em; margin:0 0 18px; text-wrap:balance}
+  .dek{font-size:21px; color:var(--ink-soft); margin:0; max-width:60ch}
+  h2{font-size:clamp(26px,4vw,34px); line-height:1.1; letter-spacing:-.01em; margin:70px 0 6px; text-wrap:balance; scroll-margin-top:20px}
+  h2 .num{font-family:var(--mono); font-size:15px; color:var(--accent); display:block; letter-spacing:.06em; margin-bottom:8px; font-weight:600}
+  h3{font-size:21px; margin:40px 0 4px; font-style:italic}
+  h4{font-family:var(--mono); font-size:15px; margin:26px 0 4px; color:var(--accent); letter-spacing:.02em}
+  p{margin:14px 0; max-width:65ch}
+  strong{font-weight:600}
+  .lead{font-size:22px; line-height:1.5}
+  .mono,code{font-family:var(--mono); font-size:.85em; background:var(--paper-2); padding:1px 6px; border-radius:4px}
+  pre{font-family:var(--mono); font-size:13.5px; line-height:1.55; background:#20201C; color:#EDE7D7; padding:18px 20px; border-radius:12px; overflow-x:auto; margin:20px 0}
+  pre code{background:none; padding:0; font-size:inherit; color:inherit}
+  .say{font-family:var(--mono); font-size:.85em; color:var(--accent)}
+  figure{margin:34px 0; padding:0}
+  figcaption{font-family:var(--sans); font-size:13.5px; color:var(--ink-faint); margin-top:12px; text-align:center; line-height:1.5}
+  .figbox{background:var(--card); border:1px solid var(--rule); border-radius:14px; padding:30px 26px}
+  svg{display:block; width:100%; height:auto; overflow:visible}
+  .card{background:var(--card); border:1px solid var(--rule); border-radius:14px; padding:24px 28px; margin:26px 0}
+  .callout{background:var(--accent-bg); border-left:3px solid var(--accent); border-radius:0 10px 10px 0; padding:18px 22px; margin:26px 0; font-size:18px}
+  .callout .kicker{font-family:var(--sans); font-size:13px; text-transform:uppercase; letter-spacing:.1em; color:var(--accent); margin:0 0 6px}
+  .tag{font-family:var(--sans); font-weight:600; font-size:11.5px; letter-spacing:.03em; padding:3px 9px; border-radius:999px; display:inline-block; white-space:nowrap}
+  .t-pass{background:var(--pass-bg); color:var(--pass)} .t-block{background:var(--block-bg); color:var(--block)} .t-hold{background:var(--hold-bg); color:var(--hold)}
+  table{border-collapse:collapse; width:100%; font-family:var(--sans); font-size:14px; margin:22px 0}
+  .tblwrap{overflow-x:auto; margin:22px 0; border:1px solid var(--rule); border-radius:12px}
+  .tblwrap table{margin:0}
+  th,td{text-align:left; padding:11px 14px; border-bottom:1px solid var(--rule); vertical-align:top}
+  th{font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-faint); background:var(--paper-2)}
+  td code{font-size:12.5px}
+  tr:last-child td{border-bottom:none}
+  ul.clean{list-style:none; padding:0; margin:16px 0}
+  ul.clean li{padding:9px 0 9px 28px; position:relative; border-bottom:1px solid var(--rule); max-width:65ch}
+  ul.clean li:last-child{border-bottom:none}
+  ul.clean li::before{content:""; position:absolute; left:3px; top:18px; width:7px; height:7px; border-radius:50%; background:var(--accent)}
+  .toc{font-family:var(--sans); font-size:15px; background:var(--card); border:1px solid var(--rule); border-radius:12px; padding:20px 24px; margin:34px 0; columns:2; column-gap:32px}
+  @media(max-width:600px){.toc{columns:1}}
+  .toc a{color:var(--accent); text-decoration:none; display:block; padding:4px 0} .toc a:hover{text-decoration:underline}
+  .filerow{display:grid; grid-template-columns:200px 1fr; gap:8px 18px; padding:10px 0; border-bottom:1px solid var(--rule); align-items:start}
+  @media(max-width:600px){.filerow{grid-template-columns:1fr}}
+  .filerow .fn{font-family:var(--mono); font-size:13px; color:var(--accent); font-weight:600}
+  .filerow .fd{font-size:15.5px; color:var(--ink-soft)}
+  .two{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:26px 0}
+  @media(max-width:620px){.two{grid-template-columns:1fr}}
+  .mini{background:var(--card); border:1px solid var(--rule); border-radius:12px; padding:18px 20px}
+  .mini .top{font-family:var(--sans); font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:8px}
+  hr.div{border:none; border-top:1px solid var(--rule); margin:56px 0 0}
+</style>
+
+<header class="hero">
+  <p class="eyebrow">Preflight · a build for VoiceOS (WakoAI) · taught from zero</p>
+  <h1>Preflight, from scratch.</h1>
+  <p class="dek">Everything in the repo, taught assuming you know nothing — the idea, then the code, file by file, with diagrams and a full end-to-end trace. Read it once and you'll be able to open any file and say what it does and why.</p>
+</header>
+
+<div class="wrap">
+
+  <div class="toc">
+    <a href="#p0">0 · The one job, in a sentence</a>
+    <a href="#p1">1 · Why a tool call goes wrong</a>
+    <a href="#p2">2 · The core idea: provenance</a>
+    <a href="#p3">3 · The check, physically</a>
+    <a href="#p4">4 · The 7 verdicts (reason codes)</a>
+    <a href="#p5">5 · The repo: 5 packages</a>
+    <a href="#p6">6 · Inside <code>core</code>, file by file</a>
+    <a href="#p7">7 · Inside <code>contracts</code></a>
+    <a href="#p8">8 · Inside the <code>adapter</code></a>
+    <a href="#p9">9 · Inside <code>eval</code> (the rigor)</a>
+    <a href="#p10">10 · Inside <code>demo</code></a>
+    <a href="#p11">11 · End-to-end trace</a>
+    <a href="#p12">12 · Run it yourself</a>
+    <a href="#p13">13 · Honest scope</a>
+  </div>
+
+  <!-- 0 -->
+  <h2 id="p0"><span class="num">SECTION 0</span>The one job, in a sentence</h2>
+  <p class="lead">A voice assistant hears you, then <em>does</em> things — sends a message, issues a refund. Preflight is a small, deterministic checkpoint that sits at the <strong>last inch</strong>, right before an action fires, and asks one question: <strong>does every important detail of this action actually trace back to something you said?</strong> If yes, it fires untouched. If not, it holds and asks one question — or, for an injected value, blocks outright.</p>
+
+  <figure class="figbox">
+    <svg viewBox="0 0 720 150" role="img" aria-label="Speech flows through the assistant to a proposed action, then through Preflight, then fires.">
+      <circle cx="48" cy="75" r="22" fill="none" stroke="#1B1813" stroke-width="2"/><circle cx="48" cy="66" r="7" fill="#1B1813"/><path d="M33 90 q15 -16 30 0" fill="#1B1813"/>
+      <text x="48" y="122" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="12.5" fill="#4A453B">you</text>
+      <line x1="74" y1="75" x2="120" y2="75" stroke="#8A8272" stroke-width="2"/><polygon points="120,75 111,71 111,79" fill="#8A8272"/>
+      <rect x="126" y="52" width="150" height="46" rx="11" fill="#FBF8F1" stroke="#8A8272"/><text x="201" y="74" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="13" fill="#4A453B">assistant</text><text x="201" y="90" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="11" fill="#8A8272">proposes an action</text>
+      <line x1="276" y1="75" x2="322" y2="75" stroke="#8A8272" stroke-width="2"/><polygon points="322,75 313,71 313,79" fill="#8A8272"/>
+      <rect x="328" y="46" width="150" height="58" rx="12" fill="#E2E9EC" stroke="#2E4A5A" stroke-width="2"/><text x="403" y="70" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="14" font-weight="700" fill="#2E4A5A">PREFLIGHT</text><text x="403" y="88" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="11.5" fill="#2E4A5A">the last-inch check</text>
+      <line x1="478" y1="75" x2="524" y2="75" stroke="#8A8272" stroke-width="2"/><polygon points="524,75 515,71 515,79" fill="#8A8272"/>
+      <rect x="530" y="30" width="150" height="34" rx="8" fill="#E6EEE4" stroke="#3F6B4A"/><text x="605" y="52" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="12.5" fill="#3F6B4A">✔ fires (grounded)</text>
+      <rect x="530" y="70" width="150" height="24" rx="7" fill="#F4E9CE" stroke="#B07A16"/><text x="605" y="86" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="11.5" fill="#8a5f12">⏸ hold — ask</text>
+      <rect x="530" y="100" width="150" height="24" rx="7" fill="#F3E2DC" stroke="#A63B27"/><text x="605" y="116" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="11.5" fill="#A63B27">⛔ block — injection</text>
+    </svg>
+    <figcaption>Preflight does not talk to the model, the internet, or the microphone. It compares the proposed action to the words already transcribed. That's the whole system.</figcaption>
+  </figure>
+
+  <!-- 1 -->
+  <h2 id="p1"><span class="num">SECTION 1</span>Why a tool call goes wrong in the first place</h2>
+  <p>To understand what Preflight guards against, you have to see that your words pass through <strong>two neural networks</strong> before an action happens, and the second one doesn't copy your details — it re-generates them.</p>
+  <figure class="figbox">
+    <svg viewBox="0 0 720 250" role="img" aria-label="Audio to ASR to transcript to LLM to a tool call; the LLM re-types values and can drift.">
+      <g font-family="ui-sans-serif,system-ui">
+        <rect x="20" y="40" width="150" height="54" rx="11" fill="#E2E9EC" stroke="#2E4A5A"/><text x="95" y="62" text-anchor="middle" font-size="13" font-weight="700" fill="#2E4A5A">🎤 audio</text><text x="95" y="80" text-anchor="middle" font-size="11" fill="#4A453B">"...fifty-four seventy-nine"</text>
+        <line x1="170" y1="67" x2="205" y2="67" stroke="#8A8272" stroke-width="2"/><polygon points="205,67 196,63 196,71" fill="#8A8272"/>
+        <rect x="207" y="34" width="150" height="66" rx="11" fill="#FBF8F1" stroke="#A63B27"/><text x="282" y="56" text-anchor="middle" font-size="13" font-weight="700" fill="#1B1813">ASR</text><text x="282" y="73" text-anchor="middle" font-size="10.5" fill="#A63B27">neural net · can mishear</text><text x="282" y="90" text-anchor="middle" font-family="ui-monospace,monospace" font-size="10.5" fill="#2E4A5A">"refund Dan $54.79"</text>
+        <line x1="357" y1="67" x2="392" y2="67" stroke="#8A8272" stroke-width="2"/><polygon points="392,67 383,63 383,71" fill="#8A8272"/>
+        <rect x="394" y="34" width="150" height="66" rx="11" fill="#FBF8F1" stroke="#A63B27"/><text x="469" y="56" text-anchor="middle" font-size="13" font-weight="700" fill="#1B1813">LLM</text><text x="469" y="73" text-anchor="middle" font-size="10.5" fill="#A63B27">neural net · re-types args</text><text x="469" y="90" text-anchor="middle" font-family="ui-monospace,monospace" font-size="10.5" fill="#A63B27">amount:"54.99"</text>
+        <line x1="544" y1="67" x2="579" y2="67" stroke="#8A8272" stroke-width="2"/><polygon points="579,67 570,63 570,71" fill="#8A8272"/>
+        <rect x="581" y="40" width="120" height="54" rx="11" fill="#FBF8F1" stroke="#8A8272"/><text x="641" y="62" text-anchor="middle" font-size="12.5" fill="#4A453B">tool call</text><text x="641" y="80" text-anchor="middle" font-size="10.5" fill="#8A8272">about to fire</text>
+        <text x="360" y="150" text-anchor="middle" font-size="15" font-style="italic" fill="#4A453B">The "54.79" you said and the "54.99" that fires are not the same bytes.</text>
+        <text x="360" y="176" text-anchor="middle" font-size="15" font-style="italic" fill="#4A453B">The model re-typed the number by sampling likely next tokens. Usually right. Sometimes not.</text>
+        <rect x="150" y="200" width="420" height="34" rx="9" fill="#E2E9EC" stroke="#2E4A5A"/><text x="360" y="222" text-anchor="middle" font-size="13" font-weight="700" fill="#2E4A5A">Preflight sits here — between the tool call and firing.</text>
+      </g>
+    </svg>
+    <figcaption>Four concrete things flip a value: model re-typing drift, contamination from a nearby number, injection from read content, or a true ASR mishear. Preflight catches the first three. It cannot catch the fourth — if the transcript itself is wrong, it faithfully grounds the wrong words. That limit is stated in the code (<code>codes.ts</code>) and never hidden.</figcaption>
+  </figure>
+
+  <!-- 2 -->
+  <h2 id="p2"><span class="num">SECTION 2</span>The core idea: provenance</h2>
+  <p>Every value in an action has a <strong>source</strong> — where it came from. Preflight ranks sources, and refuses to let a dangerous value come from a weak source. This ranking is the whole intellectual core; everything else is plumbing around it.</p>
+  <figure class="figbox">
+    <svg viewBox="0 0 720 280" role="img" aria-label="A ranked ladder of sources from what you said (top) to model-composed (bottom).">
+      <g font-family="ui-sans-serif,system-ui">
+        <rect x="60" y="16" width="600" height="42" rx="9" fill="#E6EEE4" stroke="#3F6B4A"/><text x="80" y="43" font-size="14.5" font-weight="700" fill="#3F6B4A">transcript span — what you SAID</text><text x="640" y="43" text-anchor="end" font-size="12" fill="#3F6B4A">highest · can license anything, incl. a destination</text>
+        <rect x="60" y="66" width="600" height="42" rx="9" fill="#EEF3E9" stroke="#6E8A63"/><text x="80" y="93" font-size="14.5" font-weight="700" fill="#4A453B">tool output — a result it looked up &amp; showed you</text><text x="640" y="93" text-anchor="end" font-size="12" fill="#4A453B">trusted · e.g. a customer list, a search hit</text>
+        <rect x="60" y="116" width="600" height="42" rx="9" fill="#F1EEE3" stroke="#B9AE93"/><text x="80" y="143" font-size="14.5" font-weight="700" fill="#4A453B">known session state</text><text x="640" y="143" text-anchor="end" font-size="12" fill="#4A453B">your real channels / contacts</text>
+        <rect x="60" y="166" width="600" height="42" rx="9" fill="#F4E9CE" stroke="#B07A16"/><text x="80" y="193" font-size="14.5" font-weight="700" fill="#8a5f12">screen / read content — text it merely READ</text><text x="640" y="193" text-anchor="end" font-size="12" fill="#8a5f12">low · may fill a message, NEVER a destination</text>
+        <rect x="60" y="216" width="600" height="42" rx="9" fill="#F3E2DC" stroke="#A63B27"/><text x="80" y="243" font-size="14.5" font-weight="700" fill="#A63B27">model-composed — invented out of nowhere</text><text x="640" y="243" text-anchor="end" font-size="12" fill="#A63B27">rank zero · can never license routing</text>
+      </g>
+    </svg>
+    <figcaption>The lattice lives in <code>provenance.ts</code>. The single rule that does most of the work: a <strong>destination</strong> (who gets the money/message) must be licensed by a <strong>transcript span</strong>. Text the assistant merely read can never become a destination — that is the injection firewall, and it's structural, not a guess.</figcaption>
+  </figure>
+  <p>Two words you'll see everywhere in the code:</p>
+  <ul class="clean">
+    <li><strong>Routing</strong> parameters — <em>who / where / how-much</em>. A wrong one causes harm (money to the wrong person). These must trace to a licensed source.</li>
+    <li><strong>Content</strong> parameters — <em>the words of a message</em>. A wrong one is awkward, not catastrophic. These are never blocked; they're <em>surfaced</em> for you to see (disposition <code>SURFACE</code>).</li>
+  </ul>
+
+  <!-- 3 -->
+  <h2 id="p3"><span class="num">SECTION 3</span>The check, physically — and why it isn't "AI checking AI"</h2>
+  <p>The check is plain code over two inputs: the <strong>transcript</strong> (your words, sliced into positioned pieces called <em>spans</em>) and the <strong>proposed tool call</strong> (the action's parameters). For each routing parameter it does three deterministic steps:</p>
+  <figure class="figbox">
+    <svg viewBox="0 0 720 210" role="img" aria-label="Normalize, search the transcript spans, decide.">
+      <g font-family="ui-sans-serif,system-ui">
+        <rect x="30" y="30" width="200" height="150" rx="12" fill="#FBF8F1" stroke="#2E4A5A"/><text x="130" y="56" text-anchor="middle" font-size="14" font-weight="700" fill="#2E4A5A">1 · NORMALIZE</text><text x="130" y="82" text-anchor="middle" font-size="12" fill="#4A453B">"$54.79" → 54.79</text><text x="130" y="102" text-anchor="middle" font-size="12" fill="#4A453B">"fifty-four seventy-</text><text x="130" y="118" text-anchor="middle" font-size="12" fill="#4A453B">nine" → 54.79</text><text x="130" y="146" text-anchor="middle" font-size="11" font-style="italic" fill="#8A8272">a fixed rule table,</text><text x="130" y="162" text-anchor="middle" font-size="11" font-style="italic" fill="#8A8272">not a model</text>
+        <line x1="230" y1="105" x2="258" y2="105" stroke="#8A8272" stroke-width="2"/><polygon points="258,105 249,101 249,109" fill="#8A8272"/>
+        <rect x="260" y="30" width="200" height="150" rx="12" fill="#FBF8F1" stroke="#2E4A5A"/><text x="360" y="56" text-anchor="middle" font-size="14" font-weight="700" fill="#2E4A5A">2 · SEARCH</text><text x="360" y="82" text-anchor="middle" font-size="12" fill="#4A453B">is 54.99 in the spoken</text><text x="360" y="100" text-anchor="middle" font-size="12" fill="#4A453B">number-set {54.79}?</text><text x="360" y="128" text-anchor="middle" font-size="12" fill="#A63B27">no → not licensed</text><text x="360" y="160" text-anchor="middle" font-size="11" font-style="italic" fill="#8A8272">indexOf / editDistance /</text><text x="360" y="174" text-anchor="middle" font-size="11" font-style="italic" fill="#8A8272">set membership</text>
+        <line x1="460" y1="105" x2="488" y2="105" stroke="#8A8272" stroke-width="2"/><polygon points="488,105 479,101 479,109" fill="#8A8272"/>
+        <rect x="490" y="30" width="200" height="150" rx="12" fill="#FBF8F1" stroke="#2E4A5A"/><text x="590" y="56" text-anchor="middle" font-size="14" font-weight="700" fill="#2E4A5A">3 · DECIDE</text><text x="590" y="84" text-anchor="middle" font-size="12" fill="#3F6B4A">all licensed → PASS</text><text x="590" y="106" text-anchor="middle" font-size="12" fill="#8a5f12">one missing → HOLD</text><text x="590" y="128" text-anchor="middle" font-size="12" fill="#A63B27">from content → BLOCK</text><text x="590" y="160" text-anchor="middle" font-size="11" font-style="italic" fill="#8A8272">emit a receipt either way</text>
+      </g>
+    </svg>
+    <figcaption>Every step is a string operation or a number comparison. Same input → same output, forever. A person could run it by hand with a highlighter. There is no second model, no probability, nothing to hallucinate — which is exactly the guarantee Kai asked for ("no AI grading AI").</figcaption>
+  </figure>
+  <p>And it's fast for the same reason it's trustworthy: no model, no network. Measured in <code>core/bench/bench.ts</code>, a check runs in roughly <strong>a few millionths of a second</strong> — thousands of times faster than the action it guards.</p>
+
+  <!-- 4 -->
+  <h2 id="p4"><span class="num">SECTION 4</span>The seven verdicts (the reason codes)</h2>
+  <p>The gate can only ever return one of these outcomes. This table is the literal contents of <code>core/src/codes.ts</code> — the single authoritative list. Knowing it cold means you know everything the system can decide.</p>
+  <div class="tblwrap"><table>
+    <thead><tr><th>Wire code</th><th>Canonical name</th><th>Verdict</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>provenance_mismatch</code></td><td><code>PF_INJECTION_ROUTING_FROM_CONTENT</code></td><td><span class="tag t-block">BLOCK</span></td><td>A destination/amount slot resolved to a value whose only source is <em>read content</em> — the injection firewall. Can't be fixed by asking, so it's a hard block.</td></tr>
+      <tr><td><code>insufficient_provenance</code></td><td><code>PF_ROUTING_RANK_TOO_LOW</code></td><td><span class="tag t-block">BLOCK</span></td><td>A routing value's source ranks below the routing minimum (screen/model can never license routing). The other face of the firewall.</td></tr>
+      <tr><td><code>amount_not_in_speech</code></td><td><code>PF_AMOUNT_NOT_IN_SPEECH</code></td><td><span class="tag t-hold">HOLD</span></td><td>The amount isn't in the spoken number-set (e.g. 54.99 ∉ {54.79}). A hard inequality — no tolerance. Money ⇒ confirm.</td></tr>
+      <tr><td><code>misbound_param</code></td><td><code>PF_MISBOUND_PARAM</code></td><td><span class="tag t-hold">HOLD</span></td><td>Both values were spoken, but they trace to <em>different clauses</em> — the pairing is crossed ("refund Dan $50 and Sarah $30" → refund Dan $30).</td></tr>
+      <tr><td><code>ambiguous_target</code></td><td><code>PF_AMBIGUOUS_TARGET</code></td><td><span class="tag t-hold">HOLD</span></td><td>Two or more real targets match the spoken name; needs exactly one. (Ask which.)</td></tr>
+      <tr><td><code>target_not_found</code></td><td><code>PF_UNGROUNDED_ROUTING_PARAM</code></td><td><span class="tag t-hold">HOLD</span></td><td>A routing value resolves to nothing real — hallucinated or misheard target. Also the indirect wrong-tool catch.</td></tr>
+      <tr><td><code>missing_parameter</code></td><td><code>PF_MISSING_PARAMETER</code></td><td><span class="tag t-hold">HOLD</span></td><td>A required field is blank (a structural malformed-call check).</td></tr>
+    </tbody>
+  </table></div>
+  <p>A <strong>PASS</strong> is simply the absence of any of these. Content parameters get a fourth disposition, <strong>SURFACE</strong> — they fire but the discrepancy is shown, never hard-blocked.</p>
+
+  <!-- 5 -->
+  <h2 id="p5"><span class="num">SECTION 5</span>The repo: five packages</h2>
+  <p>The project is a small monorepo. Each package has one job and depends only on the ones beneath it. <code>core</code> knows nothing about VoiceOS — it's pure logic; everything VoiceOS-specific lives in the adapter and the contracts.</p>
+  <figure class="figbox">
+    <svg viewBox="0 0 720 320" role="img" aria-label="Architecture: core at the base, with contracts, adapter, eval, and demo depending on it.">
+      <g font-family="ui-sans-serif,system-ui">
+        <rect x="210" y="250" width="300" height="52" rx="12" fill="#E2E9EC" stroke="#2E4A5A" stroke-width="2"/><text x="360" y="272" text-anchor="middle" font-size="15" font-weight="700" fill="#2E4A5A">core</text><text x="360" y="290" text-anchor="middle" font-size="11.5" fill="#2E4A5A">the gate — pure provenance logic, zero deps, zero LLM</text>
+        <!-- dependents -->
+        <rect x="30" y="150" width="150" height="60" rx="11" fill="#FBF8F1" stroke="#8A8272"/><text x="105" y="176" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1B1813">contracts</text><text x="105" y="194" text-anchor="middle" font-size="10.5" fill="#4A453B">tool annotations + linter</text>
+        <rect x="196" y="150" width="150" height="60" rx="11" fill="#FBF8F1" stroke="#8A8272"/><text x="271" y="176" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1B1813">adapters/voiceos</text><text x="271" y="194" text-anchor="middle" font-size="10.5" fill="#4A453B">stdio MCP wrapper</text>
+        <rect x="374" y="150" width="150" height="60" rx="11" fill="#FBF8F1" stroke="#8A8272"/><text x="449" y="176" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1B1813">eval</text><text x="449" y="194" text-anchor="middle" font-size="10.5" fill="#4A453B">accuracy harness</text>
+        <rect x="540" y="150" width="150" height="60" rx="11" fill="#FBF8F1" stroke="#8A8272"/><text x="615" y="176" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1B1813">demo</text><text x="615" y="194" text-anchor="middle" font-size="10.5" fill="#4A453B">runnable demos</text>
+        <!-- lines -->
+        <g stroke="#D8CFBB" stroke-width="2">
+          <line x1="105" y1="210" x2="260" y2="250"/><line x1="271" y1="210" x2="320" y2="250"/><line x1="449" y1="210" x2="400" y2="250"/><line x1="615" y1="210" x2="460" y2="250"/>
+        </g>
+        <text x="360" y="40" text-anchor="middle" font-size="15" font-style="italic" fill="#4A453B">Everything points down to core. Core points at nothing.</text>
+      </g>
+    </svg>
+  </figure>
+  <div class="tblwrap"><table>
+    <thead><tr><th>Package</th><th>Job</th><th>Tests</th></tr></thead>
+    <tbody>
+      <tr><td><code>core</code></td><td>The gate + provenance logic. The brain. Zero dependencies, no LLM, no network.</td><td>51 (50 pass, 1 todo)</td></tr>
+      <tr><td><code>contracts</code></td><td>Per-tool annotations (which params are routing vs content) + a linter that validates them.</td><td>13</td></tr>
+      <tr><td><code>adapters/voiceos</code></td><td>A stdio MCP server that wraps VoiceOS tool calls with the gate. OBSERVE / ENFORCE modes.</td><td>18</td></tr>
+      <tr><td><code>eval</code></td><td>Measures the gate's catch-rate and false-block-rate on labeled corpora. Honest about what it can't run.</td><td>20</td></tr>
+      <tr><td><code>demo</code></td><td>Deterministic, runnable demonstrations you can show live.</td><td>—</td></tr>
+    </tbody>
+  </table></div>
+  <p style="font-family:var(--sans); font-size:14px; color:var(--ink-faint)">Total: <strong>102 tests, 101 pass, 0 fail, 1 honest <code>todo</code></strong> (a documented residual, explained in Section 13).</p>
+
+  <!-- 6 -->
+  <h2 id="p6"><span class="num">SECTION 6</span>Inside <code>core</code>, file by file</h2>
+  <p>This is the brain. The files form a pipeline: turn speech into searchable spans → know what targets exist → resolve a spoken name to a real target → run the gate → emit a receipt. Here's the data flow, then each file.</p>
+  <figure class="figbox">
+    <svg viewBox="0 0 720 220" role="img" aria-label="Data flow through core: transcript and grounding feed resolve, which feeds the gate, which emits a receipt or a block.">
+      <g font-family="ui-sans-serif,system-ui" font-size="12">
+        <rect x="20" y="24" width="150" height="48" rx="10" fill="#E2E9EC" stroke="#2E4A5A"/><text x="95" y="44" text-anchor="middle" font-weight="700" fill="#2E4A5A">transcript.ts</text><text x="95" y="61" text-anchor="middle" fill="#4A453B">words → spans</text>
+        <rect x="20" y="96" width="150" height="48" rx="10" fill="#E2E9EC" stroke="#2E4A5A"/><text x="95" y="116" text-anchor="middle" font-weight="700" fill="#2E4A5A">grounding.ts</text><text x="95" y="133" text-anchor="middle" fill="#4A453B">known targets</text>
+        <line x1="170" y1="48" x2="235" y2="80" stroke="#D8CFBB" stroke-width="2"/><line x1="170" y1="120" x2="235" y2="90" stroke="#D8CFBB" stroke-width="2"/>
+        <rect x="238" y="60" width="150" height="48" rx="10" fill="#FBF8F1" stroke="#8A8272"/><text x="313" y="80" text-anchor="middle" font-weight="700" fill="#1B1813">resolve.ts</text><text x="313" y="97" text-anchor="middle" fill="#4A453B">name → real target</text>
+        <line x1="388" y1="84" x2="430" y2="84" stroke="#8A8272" stroke-width="2"/><polygon points="430,84 421,80 421,88" fill="#8A8272"/>
+        <rect x="433" y="48" width="150" height="72" rx="10" fill="#E2E9EC" stroke="#2E4A5A" stroke-width="2"/><text x="508" y="72" text-anchor="middle" font-weight="700" fill="#2E4A5A">gate.ts</text><text x="508" y="90" text-anchor="middle" fill="#2E4A5A">runGate / preflight</text><text x="508" y="106" text-anchor="middle" fill="#4A453B">+ provenance, codes,</text>
+        <text x="508" y="120" text-anchor="middle" fill="#4A453B" font-size="10">misbinding</text>
+        <line x1="583" y1="70" x2="625" y2="55" stroke="#8A8272" stroke-width="2"/><polygon points="625,55 616,54 619,63" fill="#8A8272"/>
+        <line x1="583" y1="98" x2="625" y2="112" stroke="#8A8272" stroke-width="2"/><polygon points="625,112 616,104 619,113" fill="#8A8272"/>
+        <rect x="628" y="34" width="80" height="36" rx="9" fill="#E6EEE4" stroke="#3F6B4A"/><text x="668" y="56" text-anchor="middle" font-size="11" font-weight="700" fill="#3F6B4A">receipt</text>
+        <rect x="628" y="100" width="80" height="36" rx="9" fill="#F3E2DC" stroke="#A63B27"/><text x="668" y="122" text-anchor="middle" font-size="11" font-weight="700" fill="#A63B27">block</text>
+        <text x="360" y="180" text-anchor="middle" font-size="13.5" font-style="italic" fill="#4A453B">transcript + grounding → resolve → gate → (receipt on pass · block on fail)</text>
+      </g>
+    </svg>
+  </figure>
+
+  <h4>The pipeline files</h4>
+  <div class="filerow"><div class="fn">provenance.ts</div><div class="fd">The source-rank lattice from Section 2. Defines <code>Source</code>, <code>SourceKind</code>, the ranks (<code>RANK</code>), and the minimum rank each parameter class requires (<code>minRankFor</code>, <code>bestRank</code>). The rulebook for "where is a value allowed to come from."</div></div>
+  <div class="filerow"><div class="fn">transcript.ts</div><div class="fd"><code>finalizeUtterance(id, text)</code> turns your spoken sentence into a <code>FinalizedTranscript</code> — the words as positioned <em>spans</em> the gate can search. <code>attributeToTranscript</code> answers "does this value appear in the transcript, and where?"</div></div>
+  <div class="filerow"><div class="fn">grounding.ts</div><div class="fd"><code>GroundingStore</code> — the session's memory of what really exists (your channels, contacts, customers) and <em>how</em> each was learned (its source). <code>rememberTargets(targets, source)</code> is how a tool result gets admitted to the pool.</div></div>
+  <div class="filerow"><div class="fn">resolve.ts</div><div class="fd"><code>resolveTarget</code> maps a spoken name to a real target using fuzzy matching (<code>editDistance</code>, <code>normalizeLoose</code>/<code>normalizeTight</code>). Returns a <code>Resolution</code> with 0 candidates (→ not-found), 1 (→ good), or many (→ ambiguous).</div></div>
+  <div class="filerow"><div class="fn">licensing.ts</div><div class="fd"><code>licensingDescriptor</code> — given a resolution and its sources, computes what actually licenses a parameter: the bridge between "we found a target" and "is its source strong enough?"</div></div>
+
+  <h4>The gate itself</h4>
+  <div class="filerow"><div class="fn">gate.ts</div><div class="fd">The heart, ~470 lines. <code>preflight(call, contract, store)</code> walks every parameter in the tool's contract: content params are consent-surfaced; routing params are resolved, rank-checked, and slot-checked (a <em>destination</em> demands a transcript span = the firewall; an <em>amount</em> runs the number-twin check). Then it runs the misbinding pass. It returns a <code>Receipt</code>, or throws a <code>PreflightBlock</code> with a reason code. <code>runGate</code> wraps that in a plain <code>{verdict:'pass'|'block'}</code> object.</div></div>
+  <div class="filerow"><div class="fn">misbinding.ts</div><div class="fd"><code>assertCoClausal</code> — when two or more routing params each ground, it checks they came from the <em>same clause</em>. Catches the crossed pairing ("refund Dan $50 and Sarah $30" fired as refund Dan $30). Emits <code>misbound_param</code>.</div></div>
+  <div class="filerow"><div class="fn">codes.ts</div><div class="fd">The seven-verdict registry from Section 4 — wire code, canonical <code>PF_*</code> name, disposition, and a summary. Also documents in-code what is structurally out of scope (ASR mishear, direct wrong-tool).</div></div>
+  <div class="filerow"><div class="fn">receipt.ts</div><div class="fd"><code>emitReceipt</code> → a <code>PreflightReceipt</code>: for every parameter, the value and the source that vouched for it. The audit trail — proof of <em>why</em> an action was allowed.</div></div>
+  <div class="filerow"><div class="fn">shadow.ts</div><div class="fd"><code>shadowGate</code> / <code>ShadowLog</code> — OBSERVE mode: record what the gate <em>would</em> have blocked, without blocking anything. How you roll out safely and gather real data before enforcing.</div></div>
+  <div class="filerow"><div class="fn">block.ts</div><div class="fd"><code>PreflightBlock</code>, the typed error the gate throws, plus <code>requiredText</code>, the required-field extractor behind <code>missing_parameter</code>.</div></div>
+  <div class="filerow"><div class="fn">index.ts</div><div class="fd">The public front door — the single list of everything <code>core</code> exports.</div></div>
+
+  <div class="callout"><p class="kicker">enforced, not just claimed</p><p style="margin:0"><code>core/test/enforcement.test.ts</code> is a test that <strong>fails the build</strong> if any code path in <code>core</code> imports a network or LLM library. "No AI, no network" isn't a promise in a README — it's a test.</p></div>
+
+  <!-- 7 -->
+  <h2 id="p7"><span class="num">SECTION 7</span>Inside <code>contracts</code></h2>
+  <p>The gate needs to know, for each tool, which parameters are routing and which are content — and which routing params are dangerous <em>slots</em> (destination, amount). That knowledge lives in annotation files, one per integration.</p>
+  <div class="filerow"><div class="fn">catalogs/voiceos.annotations.json</div><div class="fd">The annotations for VoiceOS's tools — each parameter tagged routing/content and, where relevant, its slot.</div></div>
+  <div class="filerow"><div class="fn">catalogs/slack.annotations.json</div><div class="fd">A second catalog, proving the format generalizes beyond one product.</div></div>
+  <div class="filerow"><div class="fn">src/lint.mjs</div><div class="fd">The linter — validates every catalog against the format so a write/destructive tool can't ship un-annotated (which would be fail-open). Run by the tests.</div></div>
+  <div class="filerow"><div class="fn">FORMAT.md</div><div class="fd">The human spec for the annotation format.</div></div>
+
+  <!-- 8 -->
+  <h2 id="p8"><span class="num">SECTION 8</span>Inside the <code>adapter</code> (how it plugs into VoiceOS)</h2>
+  <p><code>core</code> is pure logic; the adapter is how it actually rides along inside VoiceOS. VoiceOS launches custom tools as small local <em>stdio MCP</em> subprocesses — so Preflight ships as one of those, wrapping each tool call.</p>
+  <div class="filerow"><div class="fn">withPreflight.ts</div><div class="fd">The wrapper. Takes a tool handler and returns a guarded one: build the context, run the gate, and on a block return a repair instead of firing. The seam between VoiceOS and <code>core</code>.</div></div>
+  <div class="filerow"><div class="fn">server.ts</div><div class="fd">The stdio MCP server itself — the process VoiceOS spawns and talks to.</div></div>
+  <div class="filerow"><div class="fn">context.ts</div><div class="fd">Assembles what the gate needs for a call — the current transcript + the grounding store — from what crosses the MCP boundary.</div></div>
+  <div class="filerow"><div class="fn">runtime.ts</div><div class="fd">The per-call runtime that drives OBSERVE vs ENFORCE and threads the verdict back.</div></div>
+  <div class="filerow"><div class="fn">repair.ts</div><div class="fd">Turns a block into a single spoken repair line ("You said $54.79 — which amount?") — Jonah's error-handling concern, answered by riding the assistant's existing revise loop.</div></div>
+  <div class="filerow"><div class="fn">receipt.ts / bin.ts / index.ts</div><div class="fd">The adapter-side receipt emitter, the executable entry point, and the exports.</div></div>
+  <div class="two">
+    <div class="mini"><div class="top">OBSERVE</div><p style="margin:0; font-size:15px; color:var(--ink-soft)">The gate runs and <em>logs</em> what it would block. Nothing changes for the user. You gather real data and prove the false-block rate before touching behavior.</p></div>
+    <div class="mini"><div class="top">ENFORCE</div><p style="margin:0; font-size:15px; color:var(--ink-soft)">The gate actually holds/blocks. You switch to this only once OBSERVE shows it's safe. Rollout is a config flag, not a rewrite.</p></div>
+  </div>
+  <p>See <code>docs/INTEGRATION.md</code> for the exact wiring, including the one small change on the VoiceOS side (handing the transcript to the tool-call context) that unlocks the full checks.</p>
+
+  <!-- 9 -->
+  <h2 id="p9"><span class="num">SECTION 9</span>Inside <code>eval</code> — the part that makes Kai nod</h2>
+  <p>A safety layer is worthless if you can't prove how often it's right. <code>eval</code> measures the gate against labeled cases and reports honestly. This is the rigor half — the answer to "no AI grading AI, and don't just tell me it works, <em>show</em> me."</p>
+  <div class="filerow"><div class="fn">corpora/self · blind · replay</div><div class="fd">Three sets of labeled cases (<code>cases.json</code>). <em>Self</em> = generated from the gate's own shadow log; <em>blind</em> = written independently to probe capabilities; <em>replay</em> = drawn from real traffic shapes. Reported <strong>separately</strong> — never blended into one flattering number.</div></div>
+  <div class="filerow"><div class="fn">src/runner.ts</div><div class="fd">Loads a corpus and runs every case through the real gate, collecting the verdicts.</div></div>
+  <div class="filerow"><div class="fn">src/adapter.ts</div><div class="fd">The capability-honest scorer. If a case needs something <code>core</code> doesn't implement yet, it's scored <code>NOT-RUNNABLE-YET</code> with the missing capability <em>named and counted</em> — never quietly turned into a fake pass or a fake catch.</div></div>
+  <div class="filerow"><div class="fn">src/report.ts</div><div class="fd">Renders one table per corpus: catch-rate, false-block-rate. Contains no cross-corpus aggregation — and the tests assert its absence, so a blended number can't sneak in.</div></div>
+  <div class="filerow"><div class="fn">src/catalog.ts · schema.ts · fixturegen.ts · cli.ts</div><div class="fd">Catalog loading, the case schema, the fixture generator (grows new test cases from the shadow log), and the command-line entry (requires an explicit <code>--timestamp</code> — no hidden clock, so runs are reproducible).</div></div>
+  <div class="callout"><p class="kicker">the honesty is the feature</p><p style="margin:0">The design choice that impresses a rigor person isn't a high score — it's that the harness <strong>refuses to fake one</strong>. Unrunnable cases are counted as unrunnable, out loud. That's the opposite of a demo that hides its failures.</p></div>
+
+  <!-- 10 -->
+  <h2 id="p10"><span class="num">SECTION 10</span>Inside <code>demo</code></h2>
+  <div class="filerow"><div class="fn">amount-catch.mjs</div><div class="fd">The tightest one. Jonah's case on the real gate: you say $54.79, the model re-types $54.99 → HOLD. The correct $54.79 fires instantly. ~20 lines to read; matches a passing test.</div></div>
+  <div class="filerow"><div class="fn">run.mjs</div><div class="fd">"The Setup" — a four-scene, two-pane demo (VoiceOS without Preflight vs with). Writes <code>setup.html</code> / <code>panel.html</code>. Deterministic: same output every run.</div></div>
+  <div class="filerow"><div class="fn">autonomy.mjs</div><div class="fd">Runs the multi-step prototype (see Section 13). Writes <code>autonomy.html</code>. Present in the repo as a forward-looking demo, not part of the core pitch.</div></div>
+  <p>All demos are offline and deterministic — no model, no network — so they behave identically in front of anyone.</p>
+
+  <!-- 11 -->
+  <h2 id="p11"><span class="num">SECTION 11</span>End-to-end: one call through every file</h2>
+  <p>Follow <span class="say">"refund Dan $54.79"</span> where the model re-types the amount as <code>$54.99</code>. This is exactly how the files connect.</p>
+  <div class="card">
+    <ol style="margin:0; padding-left:22px; line-height:1.7">
+      <li><strong>transcript.ts</strong> — <code>finalizeUtterance</code> turns your sentence into spans: <code>[refund][Dan][$54.79]</code>.</li>
+      <li><strong>grounding.ts</strong> — the session already remembered your customers from a list-read: <code>Dan</code>, <code>Sarah</code> (source: <code>tool_output</code>).</li>
+      <li>The model proposes <code>refund(recipient="Dan", amount="54.99")</code>. The adapter's <strong>context.ts</strong> packages the call + transcript + store and <strong>withPreflight.ts</strong> hands them to the gate.</li>
+      <li><strong>gate.ts</strong> — parameter <code>recipient</code> (a destination slot): <strong>resolve.ts</strong> matches "Dan" to the real customer; it carries a transcript span → <span class="tag t-pass">licensed</span>.</li>
+      <li><strong>gate.ts</strong> — parameter <code>amount</code> (an amount slot): normalize → <code>54.99</code>; is it in the spoken number-set <code>{54.79}</code>? No. → throw <code>PreflightBlock('amount_not_in_speech')</code>.</li>
+      <li><strong>codes.ts</strong> — that code maps to disposition <span class="tag t-hold">HOLD</span> and name <code>PF_AMOUNT_NOT_IN_SPEECH</code>.</li>
+      <li><strong>repair.ts</strong> — turns it into one spoken line: "You said fifty-four seventy-nine — which amount should I refund?"</li>
+      <li><strong>receipt.ts</strong> — records the whole decision (recipient ✓ by span, amount ✗ not in speech). The action never fired. You answer, it re-checks, it sends the right number.</li>
+    </ol>
+  </div>
+  <p>The clean case is the same path with a happy ending: <code>amount="54.79"</code> is in <code>{54.79}</code> → no block → the receipt is emitted → the refund fires with zero added friction. That "fires instantly when correct" behavior is as important as the catch — it's the proof Preflight isn't a nag.</p>
+
+  <!-- 12 -->
+  <h2 id="p12"><span class="num">SECTION 12</span>Run it yourself</h2>
+  <pre><code># from the repo root
+npm install                 # (already installed; deps are dev-only)
+
+# run every test suite
+cd packages/core            && node --test    # 51 tests (50 pass, 1 todo)
+cd ../adapters/voiceos      && node --test    # 18
+cd ../../contracts          && node --test    # 13
+cd ../eval                  && node --test    # 20
+
+# the demos (offline, deterministic)
+cd ../demo
+node amount-catch.mjs        # the $54.79 → $54.99 catch
+node run.mjs                 # the four-scene two-pane demo
+node autonomy.mjs            # the multi-step prototype
+
+# measure accuracy on the corpora
+cd ../eval
+node src/cli.ts --timestamp 2026-08-23T09:00:00-07:00</code></pre>
+
+  <!-- 13 -->
+  <h2 id="p13"><span class="num">SECTION 13</span>Honest scope — what it does and doesn't do</h2>
+  <p>Being precise about the edges is what makes the whole thing trustworthy. Say these before anyone asks.</p>
+  <div class="two">
+    <div class="mini"><div class="top" style="color:var(--pass)">it catches</div>
+      <ul class="clean" style="margin:0">
+        <li>Model drift (a re-typed wrong value)</li>
+        <li>Injected / read-from-content destinations</li>
+        <li>Ambiguous targets (two "Dan"s)</li>
+        <li>Hallucinated targets you never said</li>
+        <li>Amounts you never spoke</li>
+        <li>Crossed pairings (misbinding)</li>
+      </ul>
+    </div>
+    <div class="mini"><div class="top" style="color:var(--block)">it does not catch</div>
+      <ul class="clean" style="margin:0">
+        <li>A true ASR mishear — if the <em>transcript</em> is already wrong, the gate faithfully grounds the wrong words. That's a read-back-confirmation problem, a different layer. Stated in <code>codes.ts</code>; no fake reason code invented for it.</li>
+        <li>A wrong tool where every parameter happens to ground — caught only indirectly.</li>
+      </ul>
+    </div>
+  </div>
+  <h4>The one honest <code>todo</code></h4>
+  <p>The single non-passing test is a <em>deliberately</em> marked <code>todo</code>, not a failure: a "confused-deputy launder," where a step copies a tainted value into a structured output without declaring where it came from. Catching that needs value-level dataflow from the executor — outside the pure pre-verification layer. It's named in the tests rather than hidden.</p>
+  <h4>The multi-step prototype (<code>plan.ts</code>, <code>compose.ts</code>, <code>taint.ts</code>, <code>autonomy.ts</code>)</h4>
+  <p>The repo also contains a working prototype that extends the single-action check across a multi-step plan (verify each step's provenance, propagate "taint" so a value read from content can never become a later destination, and an autonomy dial). It is a <strong>prototype</strong> — it demonstrates where the idea goes; it is not wired into a live product, because multi-step autonomy isn't something VoiceOS ships today. It's in the repo for completeness, not as a claim of shipped capability.</p>
+
+  <hr class="div">
+  <p style="text-align:center; color:var(--ink-faint); font-family:var(--sans); font-size:13.5px; margin-top:36px">Preflight · deterministic pre-verification for voice tool-calls · a prototype built for VoiceOS</p>
+
+</div>

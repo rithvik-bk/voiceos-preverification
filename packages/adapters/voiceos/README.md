@@ -1,6 +1,10 @@
 # @preflight/adapter-voiceos
 
-The **production drop-in**: a local **stdio MCP server** that wraps a downstream tool with the
+> Status: a working **prototype** with a defined VoiceOS integration path — not production-deployed.
+> It runs standalone today (in-process self-tests, a stub `send_message` downstream); the two
+> real-wiring steps (your downstream `handler` + the L28076 transcript seam) are called out below.
+
+The **integration drop-in**: a local **stdio MCP server** that wraps a downstream tool with the
 [`@preflight/core`](../../core) gate — the `withPreflight` pattern. Every call runs the
 deterministic gate on its arguments *before* the action fires; the call is either **forwarded**
 (PASS/SURFACE) or **refused** with a spoken repair (HOLD/BLOCK). Zero LLM in the hot path.
@@ -301,4 +305,5 @@ mode **labels** the firewall unavailable instead of faking it. 7/7.
 
 `test/plan.test.ts` adds the trust-runtime contract: a clean plan **all-green**, *email the lead you
 found* **PASS** (composition), *pay the email address* **BLOCK** (taint), poison → **deferred**, the
-autonomy dial at L0/L1, observe-shadow labeling, and the `verify_plan` tool over the wire. 18/18.
+autonomy dial at L0/L1, observe-shadow labeling, and the `verify_plan` tool over the wire. 11/11
+(package total: 18/18 — 7 in `server.test.ts` + 11 in `plan.test.ts`).
