@@ -30,6 +30,14 @@
   .mono,code{font-family:var(--mono); font-size:.85em; background:var(--paper-2); padding:1px 6px; border-radius:4px}
   pre{font-family:var(--mono); font-size:13.5px; line-height:1.55; background:#20201C; color:#EDE7D7; padding:18px 20px; border-radius:12px; overflow-x:auto; margin:20px 0}
   pre code{background:none; padding:0; font-size:inherit; color:inherit}
+  pre .g{color:#9FCFA6} pre .r{color:#E7A99B} pre .y{color:#E6C879} pre .d{color:#9A9384} pre .c{color:#8FC6DA}
+  .cmd{font-family:var(--mono); font-size:14px; background:#20201C; color:#EDE7D7; padding:11px 16px; border-radius:10px; margin:12px 0; overflow-x:auto}
+  .cmd::before{content:"$ "; color:#9A9384}
+  .say{background:var(--accent-bg); border-left:3px solid var(--accent); border-radius:0 10px 10px 0; padding:15px 20px; margin:18px 0}
+  .say .k{font-family:var(--sans); font-size:12px; text-transform:uppercase; letter-spacing:.1em; color:var(--accent); margin:0 0 6px; font-weight:600}
+  .say p{margin:6px 0; font-size:17.5px}
+  .scope{background:var(--hold-bg); border-left:3px solid var(--hold); border-radius:0 10px 10px 0; padding:13px 18px; margin:16px 0; font-size:16px}
+  .scope .k{font-family:var(--sans); font-size:11.5px; text-transform:uppercase; letter-spacing:.08em; color:#8a5f12; margin:0 0 4px; font-weight:600}
   .say{font-family:var(--mono); font-size:.85em; color:var(--accent)}
   figure{margin:34px 0; padding:0}
   figcaption{font-family:var(--sans); font-size:13.5px; color:var(--ink-faint); margin-top:12px; text-align:center; line-height:1.5}
@@ -292,11 +300,70 @@
   <div class="callout"><p class="kicker">the honesty is the feature</p><p style="margin:0">The design choice that impresses a rigor person isn't a high score — it's that the harness <strong>refuses to fake one</strong>. Unrunnable cases are counted as unrunnable, out loud. That's the opposite of a demo that hides its failures.</p></div>
 
   <!-- 10 -->
-  <h2 id="p10"><span class="num">SECTION 10</span>Inside <code>demo</code></h2>
-  <div class="filerow"><div class="fn">amount-catch.mjs</div><div class="fd">The tightest one. Jonah's case on the real gate: you say $54.79, the model re-types $54.99 → HOLD. The correct $54.79 fires instantly. ~20 lines to read; matches a passing test.</div></div>
-  <div class="filerow"><div class="fn">run.mjs</div><div class="fd">"The Setup" — a four-scene, two-pane demo (VoiceOS without Preflight vs with). Writes <code>setup.html</code> / <code>panel.html</code>. Deterministic: same output every run.</div></div>
-  <div class="filerow"><div class="fn">autonomy.mjs</div><div class="fd">Runs the multi-step prototype (see Section 13). Writes <code>autonomy.html</code>. Present in the repo as a forward-looking demo, not part of the core pitch.</div></div>
-  <p>All demos are offline and deterministic — no model, no network — so they behave identically in front of anyone.</p>
+  <h2 id="p10"><span class="num">SECTION 10</span>The demos — and exactly how to explain them</h2>
+  <p>This is the section to rehearse from. Three demos, all offline and deterministic — no model, no network, so they behave identically in front of anyone. Every verdict is produced by the real <code>@preflight/core</code> gate; nothing is hand-faked. For each: what it proves, the command, the real output, and what to say.</p>
+  <div class="cmd">cd ~/preflight/packages/demo</div>
+  <p><strong>Run order:</strong> <span class="tag t-pass">1. amount-catch</span> (tightest, Jonah's exact case) → <span class="tag t-pass">2. run.mjs</span> (the visual before/after) → <span class="tag t-hold">3. autonomy</span> (only if they raise multi-step). Reliability rule: these demos <em>are</em> the failures, reproduced exactly — never stake the demo on making a live model fail on cue.</p>
+
+  <h3>Demo 1 — the amount catch <span style="font-family:var(--mono); font-size:14px; color:var(--accent)">amount-catch.mjs</span></h3>
+  <p><strong>Proves:</strong> the assistant re-types your number and gets it wrong; Preflight catches it — and lets the correct one fire instantly (not a nag).</p>
+  <div class="cmd">node amount-catch.mjs</div>
+  <pre><code>  1.  You say $54.79, the model gets it right
+  model proposed:   refund(recipient="Dan", amount="$54.79")
+  PREFLIGHT:        <span class="g">✔ PASS — fires instantly (both values trace to your speech)</span>
+
+  2.  You say $54.79, the model re-types $54.99  (Jonah's case)
+  model proposed:   refund(recipient="Dan", amount="$54.99")
+  PREFLIGHT:        <span class="y">⏸ HOLD — [amount_not_in_speech]</span>
+      the amount "$54.99" is not in the spoken number-set — you never said it.
+  spoken repair:    <span class="y">"You said fifty-four seventy-nine — I have fifty-four ninety-nine. Which?"</span></code></pre>
+  <div class="say"><p class="k">what to say</p>
+    <p>"The model doesn't copy your number — it re-types it. Here it typed $54.99. Preflight parses the numbers out of your transcript — just <code>{54.79}</code> — and asks: is 54.99 in there? No, so it holds. When it's right, it fires instantly. And there's no model in that check — it's a number-parse and a set-membership test, same answer every time. That's the 'no AI grading AI.'"</p></div>
+  <div class="scope"><p class="k">honest line</p>Catches the model re-typing a wrong number. Does <strong>not</strong> catch a true ASR mishear (if the transcript already says 54.99, we ground the wrong words — a read-back layer's job). Pinned by <code>core/test/misbinding.test.ts</code>.</div>
+
+  <h3>Demo 2 — the Setup, before / after <span style="font-family:var(--mono); font-size:14px; color:var(--accent)">run.mjs</span></h3>
+  <p><strong>Proves:</strong> across four real failure types, VoiceOS-without fires the wrong action; VoiceOS-with catches each — and stays silent on the clean one.</p>
+  <div class="cmd">node run.mjs</div>
+  <pre><code>S1  Injection — pay an address you never spoke
+  LEFT   FIRES → pay_invoice $2,400 → <span class="r">scammer@evil.com</span>  (from the email body)
+  RIGHT  <span class="r">⛔ BLOCK [PF_INJECTION_ROUTING_FROM_CONTENT]</span>
+         ✗ recipient ◄ UNGROUNDED — from read content, not from you
+
+S2  Ambiguity — two people both called "Arav"
+  LEFT   FIRES → Arav Kumar  (50/50 guess)
+  RIGHT  <span class="y">⏸ HOLD [PF_AMBIGUOUS_TARGET]</span> — "Arav Patel or Arav Kumar?"
+
+S3  Clean call — fully grounded
+  RIGHT  <span class="g">✔ PASS — fires immediately, zero added words</span>  (not a nag)
+
+S4  Hallucinated destination — a channel you never named
+  RIGHT  <span class="y">⏸ HOLD [PF_TARGET_NOT_FOUND]</span> — "Which channel should this go to?"</code></pre>
+  <div class="say"><p class="k">what to say</p>
+    <p>"Same agent, four situations. On the left — today's VoiceOS — it fires the wrong action every time. On the right, each is caught with a plain reason, and the receipt shows where every value came from. Scene 3 is the important one: a clean call fires instantly — Preflight is silent unless something's genuinely ungrounded. And S1 is the injection case: that address only ever appeared in text it <em>read</em>, never in what you <em>said</em> — a payment destination structurally can't come from read content."</p></div>
+  <div class="scope"><p class="k">honest line</p>The dollar figures ("$2,400 saved") are <strong>scenario ground-truth</strong> — what the bad call would have moved — not a gate-computed number. The demo says this in its own output; say it too.</div>
+
+  <h3>Demo 3 — the Unlock, multi-step <span style="font-family:var(--mono); font-size:14px; color:var(--accent)">autonomy.mjs</span> <span style="font-size:14px; font-style:normal; color:var(--ink-faint)">(only if they raise autonomy)</span></h3>
+  <p><strong>Proves:</strong> the same check runs across a whole plan before any step fires — auto-running the safe steps, stopping only on the unprovable ones. This is the <em>vision</em>, shown as a prototype.</p>
+  <div class="cmd">node autonomy.mjs</div>
+  <pre><code>TASK  "Go through my inbox, find leads, message people, refund, pay the invoice, report."
+PLAN  11 tool calls — verified before any step fires
+
+WITH PREFLIGHT (autonomy dial → auto-run):
+  <span class="g">● PASS</span>  s4  Message the lead you found   <span class="c">↳ licensed by s1 (a lead it looked up)</span>
+  <span class="y">◆ HOLD</span>  s6  Message "John"              ↳ ambiguous — "John Smith or John Doe?"
+  <span class="y">◆ HOLD</span>  s7  Refund Dan                  ↳ amount not one you spoke
+  <span class="r">■ BLOCK</span> s8  Pay the invoice             ↳ destination read from content, never spoken
+  <span class="d">○ DEFER</span> s9  Follow up with John again   ↳ depends on held s6
+
+  PROOF-TREE  <span class="g">7 green</span> · <span class="y">2 held</span> · <span class="r">1 blocked</span> · <span class="d">1 deferred</span>   ·   <span class="g">0 ungrounded actions fired</span></code></pre>
+  <div class="say"><p class="k">what to say</p>
+    <p>"This is where it goes. A long task is un-shippable today because one silent wrong step is catastrophic. Here the same per-step check runs across the whole plan: it auto-runs the safe steps, holds on the ambiguous John and the wrong amount, blocks the payment to an address it only read, defers the step that depended on a held one. Zero ungrounded actions fire. The provenance is what makes the chain safe to run."</p></div>
+  <div class="scope"><p class="k">honest line — say it out loud</p><strong>"The plan is scripted; the verification is real and live."</strong> It's a prototype of the direction, not shipped — VoiceOS doesn't ship multi-step autonomy yet. Never imply otherwise.</div>
+
+  <h4>The files behind the demos</h4>
+  <div class="filerow"><div class="fn">amount-catch.mjs</div><div class="fd">Jonah's case on the real gate; matches a passing test.</div></div>
+  <div class="filerow"><div class="fn">run.mjs</div><div class="fd">"The Setup" — four scenes, two panes. Writes <code>setup.html</code> / <code>panel.html</code>.</div></div>
+  <div class="filerow"><div class="fn">autonomy.mjs</div><div class="fd">The multi-step prototype. Writes <code>autonomy.html</code>.</div></div>
 
   <!-- 11 -->
   <h2 id="p11"><span class="num">SECTION 11</span>End-to-end: one call through every file</h2>
