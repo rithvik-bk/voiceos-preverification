@@ -1,0 +1,26 @@
+{
+  "name": "@preflight/adapter-voiceos",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Preflight × VoiceOS drop-in: a local stdio MCP server that wraps a downstream tool with the @preflight/core gate (the withPreflight pattern). OBSERVE (shadow) by default, ENFORCE opt-in. Emits a PreflightReceipt per call (the seam to Arav's post-verifier). Args-only degraded mode when the transcript seam is absent — labeled, never faked.",
+  "//build-choice": [
+    "Same native-type-stripping build as @preflight/core: plain `node` runs the .ts files.",
+    "@preflight/core stays ZERO-dep; the MCP SDK is a dep of THIS package only (the adapter",
+    "is the layer allowed to depend on a wire protocol). The self-test wires a Client to the",
+    "Server over the SDK's in-memory linked transport pair — no stdio, no VoiceOS needed."
+  ],
+  "engines": {
+    "node": ">=23.6"
+  },
+  "bin": {
+    "preflight-voiceos": "src/bin.ts"
+  },
+  "scripts": {
+    "test": "node --test 'test/**/*.test.ts'",
+    "start": "node src/bin.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}

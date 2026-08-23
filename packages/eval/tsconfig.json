@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "lib": ["ES2023"],
+    "types": ["node"],
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "strict": false,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "//note": [
+    "@preflight/eval is a RUN-FROM-SOURCE harness/CLI, not a compiled library: its runner",
+    "imports @preflight/core by relative SOURCE path (../../core/src/index.ts) and resolves",
+    "its corpora relative to import.meta.url, so emitting to dist/ would break both. `build`",
+    "therefore typechecks (tsc --noEmit) the src + tools it ships; the tests are verified by",
+    "execution (node --test).",
+    "NON-STRICT, and test files excluded: eval typechecks @preflight/core's SOURCE transitively,",
+    "and both core's source and eval's own harness are authored to the type-stripping contract,",
+    "not to strict null / control-flow rules — and those .ts files are owned/frozen (not editable",
+    "from the build lane). A non-strict --noEmit pass still catches real errors (missing imports,",
+    "bad syntax, non-erasable TS) without gating on strictNullChecks pedantry over frozen source."
+  ],
+  "include": ["src/**/*.ts", "tools/**/*.ts"]
+}

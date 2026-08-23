@@ -1,0 +1,39 @@
+name: CI
+
+# Preflight CI: install, build, and run the SCOPED per-package tests.
+# The tests run through `npm test` -> `npm run test --workspaces`, which executes each
+# package's own `node --test` inside its own directory. It NEVER does a repo-wide
+# `node --test`, so the vendored uvo snapshot under vendor/ is never collected and the
+# per-package counts stay clean.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          # >=23.6 is required: the packages run and test directly from .ts source via
+          # Node's native type-stripping. 24.x is the current LTS-track line with it stable.
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install (workspaces, root lockfile)
+        run: npm ci
+
+      - name: Build (core -> dist, eval typecheck, contracts syntax-check)
+        run: npm run build
+
+      - name: Test (scoped per package — never blended with vendor/)
+        run: npm test
+
+      - name: Lint tool contracts (annotation coverage)
+        run: npm run lint

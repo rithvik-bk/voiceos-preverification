@@ -1,0 +1,34 @@
+{
+  "name": "@preflight/eval",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Preflight eval harness — corpus runner (self-generated / blind / replay, reported separately per S18.3), capability-honest adapter (NOT-RUNNABLE-YET, never a faked verdict), fixture generator (S18.1 self-growing loop off the shadow log). Zero runtime deps, node:test, same native type-stripping build as @preflight/core.",
+  "//design-choices": [
+    "S18.3 / TEST-ENG VETO: catch rate and false-block rate are computed and rendered PER",
+    "CORPUS ONLY. There is no code path that produces a blended number; report.ts has no",
+    "cross-corpus aggregation and the tests assert its absence.",
+    "NO-SILENT-CAPS: where the blind schema uses capabilities @preflight/core does not",
+    "implement yet (card verdicts, screen observations, streaming, derived time, amounts,",
+    "non-entity referents, ...), the adapter scores the case NOT-RUNNABLE-YET with the",
+    "missing capability NAMED and COUNTED — never adapted into a fake pass or fake catch.",
+    "DETERMINISM: no Date.now in any library code path. The run timestamp is a required",
+    "CLI argument; the self-corpus generator pins the shadow clock to 0."
+  ],
+  "engines": {
+    "node": ">=23.6"
+  },
+  "exports": {
+    "./cli": "./src/cli.ts",
+    "./runner": "./src/runner.ts",
+    "./report": "./src/report.ts",
+    "./adapter": "./src/adapter.ts"
+  },
+  "//run-model": "Run-from-source CLI/harness (imports @preflight/core by relative source path, resolves corpora via import.meta.url). `build` typechecks src+tools (tsc --noEmit); it deliberately does NOT emit dist/ (that would break the relative core import and corpora resolution). Tests are verified by execution.",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test 'test/**/*.test.ts'",
+    "eval": "node src/cli.ts",
+    "generate:self": "node tools/generate-self-corpus.ts"
+  }
+}

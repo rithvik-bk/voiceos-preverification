@@ -1,0 +1,273 @@
+{
+  "$format": "preflight-contract-annotations",
+  "version": 1,
+  "catalog": "slack",
+  "source": "Rithvik's own Slack integration in /Users/rithvik/universal-voiceos-oauth (integrations/slack/tools-t1.ts, tools-t2.ts, lifecycle.ts, tools.ts). schema_params + confirm are a snapshot transcribed by hand 2026-08-21; snapshot-vs-source fidelity is manual today (see FORMAT.md).",
+  "rank_scale": {
+    "4": "transcript_span",
+    "3": "tool_output",
+    "2": "known_state",
+    "1": "screen",
+    "0": "model_composed"
+  },
+  "tools": {
+    "slack_connect": {
+      "tier": 2,
+      "side_effect_free": false,
+      "confirm": false,
+      "reversibility": "reversible",
+      "inverse": "slack_disconnect",
+      "inverse_window_s": null,
+      "note": "Write (opens consent page, stamps cooldown, ends in a vaulted token) but toggle-grade and unconfirmed by design, like the official apps. Re-connecting via the inverse requires the human approval step; session grounding is not restored.",
+      "schema_params": ["switch"],
+      "params": {
+        "switch": {
+          "provenance": "routing",
+          "min_rank": 4,
+          "note": "Mode flag: 'switch accounts' must actually have been spoken. Declarative today — no runtime lattice check exists for boolean flags in the v3 handlers."
+        }
+      }
+    },
+    "slack_status": {
+      "tier": 1,
+      "side_effect_free": true,
+      "confirm": false,
+      "schema_params": ["connect_id"],
+      "params": {
+        "connect_id": {
+          "provenance": "routing",
+          "min_rank": 3,
+          "derivable_from": "slack_connect result",
+          "note": "Only meaningful as the id a prior slack_connect returned (tool_output, rank 3)."
+        }
+      }
+    },
+    "slack_catch_up": {
+      "tier": 1,
+      "side_effect_free": true,
+      "confirm": false,
+      "schema_params": ["lookback_minutes"],
+      "params": {
+        "lookback_minutes": {
+          "provenance": "routing",
+          "min_rank": 0,
+          "note": "Scope modifier on a read; tier-1 reads are not rank-gated (fail-open, S19.2)."
+        }
+      }
+    },
+    "slack_read_channel": {
+      "tier": 1,
+      "side_effect_free": true,
+      "confirm": false,
+      "schema_params": ["channel", "limit"],
+      "params": {
+        "channel": { "provenance": "routing", "min_rank": 0, "note": "Resolved against the live directory; ambiguity returns candidates. Not rank-gated at tier 1." },
+        "limit": { "provenance": "routing", "min_rank": 0 }
+      }
+    },
+    "slack_read_dm": {
+      "tier": 1,
+      "side_effect_free": true,
+      "confirm": false,
+      "schema_params": ["person", "limit"],
+      "params": {
+        "person": { "provenance": "routing", "min_rank": 0, "note": "Resolved against the live directory. Not rank-gated at tier 1." },
+        "limit": { "provenance": "routing", "min_rank": 0 }
+      }
+    },
+    "slack_send_message": {
+      "tier": 3,
+      "side_effect_free": false,
+      "confirm": true,
+      "reversibility": "compensable",
+      "inverse": {
+        "tool": "slack_delete_message",
+        "status": "unbuilt",
+        "via": "chat.delete",
+        "note": "chat.delete removes the message for everyone, but recipients may already have read it or been notified — compensation, not reversal. The delete tool itself is unbuilt."
+      },
+      "inverse_window_s": null,
+      "window_note": "Slack imposes no hard deadline on deleting your own message (workspace admin policy can); null = indefinite-but-compensable, never 'safe'.",
+      "schema_params": ["target", "text"],
+      "params": {
+        "target": {
+          "provenance": "routing",
+          "min_rank": 3,
+          "reversible_by": "slack_delete_message",
+          "note": "Must resolve to exactly one real conversation via the directory (tool_output, rank 3)."
+        },
+        "text": { "provenance": "content", "taint": "propagate", "note": "Posted verbatim as dictated; never entity-resolved, consent-surfaced on the card." }
+      }
+    },
+    "slack_search": {
+      "tier": 1,
+      "side_effect_free": true,
+      "confirm": false,
+      "schema_params": ["query", "count"],
+      "params": {
+        "query": { "provenance": "content", "taint": "none", "note": "Passed verbatim to search.messages; never entity-resolved." },
+        "count": { "provenance": "routing", "min_rank": 0 }
+      }
+    },
+    "slack_find": {
+      "tier": 1,
+      "side_effect_free": true,
+      "confirm": false,
+      "schema_params": ["query", "kind"],
+      "params": {
+        "query": { "provenance": "routing", "min_rank": 0, "note": "Lists every plausible match rather than picking one — ambiguity-as-data." },
+        "kind": { "provenance": "routing", "min_rank": 0 }
+      }
+    },
+    "slack_react": {
+      "tier": 2,
+      "side_effect_free": false,
+      "confirm": true,
+      "reversibility": "reversible",
+      "inverse": {
+        "tool": "slack_remove_reaction",
+        "status": "unbuilt",
+        "via": "reactions.add → reactions.remove",
+        "note": "True deterministic inverse exists at the API (same channel/timestamp/name); the tool is unbuilt. A reaction notification may still have fired — accepted residue of the reversible class."
+      },
+      "inverse_window_s": null,
+      "schema_params": ["channel", "ts", "emoji", "message"],
+      "params": {
+        "channel": { "provenance": "routing", "min_rank": 3 },
+        "ts": { "provenance": "routing", "min_rank": 3, "derivable_from": "prior_read", "note": "Must be grounded in the session registry (groundMessage) — an unproved ts blocks (ungrounded_message)." },
+        "emoji": { "provenance": "content", "taint": "none", "note": "Validated against the emoji table (invalid_emoji block); cannot carry free text." },
+        "message": { "provenance": "content", "taint": "none", "derivable_from": "prior_read", "note": "Display arg only — the model's assertion, checked against the grounding registry (assertDisplayArgGrounded), never sent." }
+      }
+    },
+    "slack_schedule_message": {
+      "tier": 3,
+      "side_effect_free": false,
+      "confirm": true,
+      "reversibility": "reversible",
+      "inverse": {
+        "tool": "slack_undo_scheduled",
+        "status": "unbuilt",
+        "via": "chat.deleteScheduledMessage",
+        "note": "The handler already returns scheduled_message_id as the exact undo handle (tools-t2.ts:904). The undo tool itself is unbuilt — RECON confirmed the only reference is that comment."
+      },
+      "inverse_window_s": null,
+      "window_note": "Window is dynamic: the inverse is valid until post_at fires; after the send, only the slack_send_message compensation path applies.",
+      "schema_params": ["channel", "user", "text", "post_at", "when"],
+      "params": {
+        "channel": { "provenance": "routing", "min_rank": 3 },
+        "user": { "provenance": "routing", "min_rank": 3 },
+        "text": { "provenance": "content", "taint": "propagate", "note": "Sent word-for-word as dictated." },
+        "when": {
+          "provenance": "routing",
+          "min_rank": 4,
+          "note": "The send instant must come from the user's words; a model-composed time is the ambiguous_time/time_in_past drift family. Enforced today as deterministic resolution + past-rejection (resolveSendInstant), not as rank-4 attribution — that gap is the §22 adoption ask."
+        },
+        "post_at": { "provenance": "routing", "min_rank": 3, "derivable_from": "when", "note": "Internal alternative; a user-edited `when` re-parses and wins over any model-supplied post_at." }
+      }
+    },
+    "slack_set_reminder": {
+      "tier": 2,
+      "side_effect_free": false,
+      "confirm": true,
+      "reversibility": "reversible",
+      "inverse": {
+        "tool": "slack_delete_reminder",
+        "status": "unbuilt",
+        "via": "reminders.delete",
+        "note": "The handler returns reminder_id — the exact handle reminders.delete needs. Tool unbuilt."
+      },
+      "inverse_window_s": null,
+      "schema_params": ["text", "time"],
+      "params": {
+        "text": { "provenance": "content", "taint": "propagate", "note": "Stored word-for-word." },
+        "time": {
+          "provenance": "routing",
+          "min_rank": 4,
+          "note": "Slack is the parser (phrase handed over verbatim); a response naming no instant blocks (ambiguous_time) rather than guessing. Rank-4 attribution itself is declarative today."
+        }
+      }
+    },
+    "slack_upload_file": {
+      "tier": 3,
+      "side_effect_free": false,
+      "confirm": true,
+      "reversibility": "compensable",
+      "inverse": {
+        "tool": "slack_delete_file",
+        "status": "unbuilt",
+        "via": "files.delete",
+        "note": "Deletion is compensation: the share notification fired and the file may already have been downloaded."
+      },
+      "inverse_window_s": null,
+      "schema_params": ["path", "filename", "channel", "user", "title", "initial_comment"],
+      "params": {
+        "path": { "provenance": "routing", "min_rank": 2, "note": "Names a local file (known_state, rank 2); existence + size enforced by a statSync hard block (file_not_found / file_empty / file_too_large) before anything is reserved at Slack." },
+        "filename": { "provenance": "content", "taint": "none", "derivable_from": "path", "note": "Display arg for the card; the tool always executes from path, and path wins on disagreement." },
+        "channel": { "provenance": "routing", "min_rank": 3 },
+        "user": { "provenance": "routing", "min_rank": 3 },
+        "title": { "provenance": "content", "taint": "propagate" },
+        "initial_comment": { "provenance": "content", "taint": "propagate" }
+      }
+    },
+    "slack_thread_reply": {
+      "tier": 3,
+      "side_effect_free": false,
+      "confirm": true,
+      "reversibility": "compensable",
+      "inverse": {
+        "tool": "slack_delete_message",
+        "status": "unbuilt",
+        "via": "chat.delete",
+        "note": "Same compensation shape as slack_send_message: the posted reply's ts comes back and is remembered, but the delete tool is unbuilt."
+      },
+      "inverse_window_s": null,
+      "schema_params": ["channel", "thread_ts", "text", "broadcast", "replying_to"],
+      "params": {
+        "channel": { "provenance": "routing", "min_rank": 3, "reversible_by": "slack_delete_message" },
+        "thread_ts": { "provenance": "routing", "min_rank": 3, "derivable_from": "prior_read", "note": "The thread root must be grounded (read or shown this session) before a character posts under it." },
+        "text": { "provenance": "content", "taint": "propagate" },
+        "broadcast": { "provenance": "routing", "min_rank": 4, "note": "Mode flag that widens the blast radius to the whole channel — must be spoken, never model-inferred. Declarative today." },
+        "replying_to": { "provenance": "content", "taint": "none", "derivable_from": "prior_read", "note": "Display arg; checked against the grounding registry, never sent." }
+      }
+    },
+    "slack_set_status": {
+      "tier": 2,
+      "side_effect_free": false,
+      "confirm": true,
+      "reversibility": "reversible",
+      "inverse": {
+        "tool": "slack_clear_status",
+        "status": "unbuilt",
+        "via": "users.profile.set(status_text:'', status_emoji:'', status_expiration:0) + dnd.endSnooze",
+        "note": "Full state restore = clear the status and end the snooze. Deterministic, no handle needed. Tool unbuilt."
+      },
+      "inverse_window_s": null,
+      "schema_params": ["text", "emoji", "duration_minutes", "snooze"],
+      "params": {
+        "text": { "provenance": "content", "taint": "propagate" },
+        "emoji": { "provenance": "content", "taint": "none", "note": "Validated via the emoji table (emojiName)." },
+        "duration_minutes": { "provenance": "routing", "min_rank": 4, "note": "A duration with no spoken number blocks (missing_duration / invalid_duration) rather than defaulting — the runtime approximation of rank 4." },
+        "snooze": { "provenance": "routing", "min_rank": 4, "note": "Mode flag; snooze without a spoken duration blocks. Rank attribution declarative today." }
+      }
+    },
+    "slack_disconnect": {
+      "tier": 2,
+      "side_effect_free": false,
+      "confirm": false,
+      "reversibility": "reversible",
+      "inverse": "slack_connect",
+      "inverse_window_s": null,
+      "note": "Toggle-grade and unconfirmed by design (like the official apps' sign-out). Destroys the vaulted token, flushes grounding + directory. The inverse re-opens consent — it needs the human's Allow click, and session grounding does not come back.",
+      "schema_params": [],
+      "params": {}
+    },
+    "slack_health": {
+      "tier": 1,
+      "side_effect_free": true,
+      "confirm": false,
+      "note": "Read-only probe (auth.test); 'connected' may only come from a returned identity, never a stored token.",
+      "schema_params": [],
+      "params": {}
+    }
+  }
+}

@@ -1,0 +1,328 @@
+{
+  "meta": {
+    "name": "replay-v1",
+    "corpus_class": "replay (SPEC.md S18.2) — real reported failures reconstructed as fixtures",
+    "reconstructed_from": "docs/pods/replay-corpus-candidates.md (RECON, 2026-08-21; local intel sources cited per case)",
+    "provenance_split": { "verbatim-report": 5, "reconstructed": 6 },
+    "honest_count_note": "11 candidates exactly as the source doc counts them — no padding; the seed's 'Spotify misfire' does NOT exist in local sources (UNKNOWNS.md U8) and is not here.",
+    "defaults": {
+      "clock": "2026-08-21T17:00:00-07:00",
+      "timezone": "America/Los_Angeles",
+      "session_id": "s1",
+      "utterance_id": "u1",
+      "transcript_version": 1,
+      "screen": null
+    }
+  },
+  "cases": [
+    {
+      "id": "R1",
+      "category": "screen-drift",
+      "tests": ["S13.3", "S13.5", "S1.4"],
+      "provenance": "verbatim-report",
+      "source": "voiceos-intel/07-discord-feedback-goldmine.md:38 (symptom, verbatim) + oauth-design/C1-browser-control-limits.md:55 (root cause verified: screen access yields nothing the turn it is called, so read-then-act runs on a stale frame). Shape aligned with the SPEC §13 PROVEN-IN-HARNESS fixture (docs/pods/screen-drift-fixture.md): surface transition mid-utterance → screen evidence invalidated → wrong end-time blocked.",
+      "rationale": "THE headline: their own known bug. Calendar event end-time defaults to 1hr even when the screen showed the 2–4pm range. The model-filled end time (3pm) matches no grounded referent and no transcript span — a silently defaulted required derived value (dropped_param with ungrounded_ref flavor).",
+      "transcript": {
+        "tokens": ["put", "that", "event", "on", "my", "calendar"],
+        "descriptor": { "text": "that event", "token": "t1" },
+        "token_ts_ms": { "t1": 1100, "t5": 4200 }
+      },
+      "prior_tool_outputs": [
+        {
+          "referent_id": "r_screen_evt",
+          "tool": "screen_read",
+          "ts": "2026-08-21T16:20:00-07:00",
+          "structural": {
+            "type": "screen_event",
+            "title": "Team sync",
+            "start": "2026-08-21T14:00:00-07:00",
+            "end": "2026-08-21T16:00:00-07:00",
+            "surface": "browser/win1/event-page",
+            "version": "stale"
+          },
+          "free_text": null
+        }
+      ],
+      "known_state": { "identity": "U_ME" },
+      "screen": {
+        "observations": [
+          { "surface": "browser/win1/event-page", "hash": "hE1", "ts_ms": 0, "user_attributed": true, "visible": ["r_screen_evt"] },
+          { "surface": "calendar/win1/week-view", "hash": "hW1", "ts_ms": 2600, "user_attributed": true, "visible": [] }
+        ]
+      },
+      "proposed_call": {
+        "tool": "calendar_create_event",
+        "tier": 2,
+        "params": { "title": "Team sync", "start": "2026-08-21T14:00:00-07:00", "end": "2026-08-21T15:00:00-07:00" },
+        "model_claimed_source": { "end": "screen" }
+      },
+      "expected": {
+        "verdict": "BLOCK",
+        "spec": "S13.3",
+        "code": "ungrounded_value",
+        "blocked_write": true,
+        "required_behavior": [
+          "end=3pm is the model's 1-hour default: it matches no grounded referent (screen showed 4pm) and no transcript span — it must not fire",
+          "surface transitioned mid-utterance: screen evidence demoted to rank 0, never re-pointed at the calendar surface (S13.3)",
+          "ideal recovery: micro-card asking the end time, or re-read of the licensed surface (S4.1)"
+        ]
+      }
+    },
+    {
+      "id": "R2",
+      "category": "made-up-tool-call",
+      "tests": ["S1.1", "S1.4"],
+      "provenance": "verbatim-report",
+      "source": "voiceos-intel/07-discord-feedback-goldmine.md:25 — Gabe (POKE, live Beeper integration): 'I run into this constantly where models make up tool calls.' Recurring pain, no single incident transcript — fixture args reconstructed, per the source doc.",
+      "rationale": "An invented call is by construction fully ungrounded: the user asked a read question; the model emitted a send to a channel no read ever surfaced.",
+      "transcript": { "tokens": ["whats", "new", "in", "the", "team", "channel"] },
+      "prior_tool_outputs": [
+        {
+          "referent_id": "r_gen",
+          "tool": "list_channels",
+          "ts": "2026-08-21T16:55:00-07:00",
+          "structural": { "type": "channel", "name": "general", "channel_id": "C0GEN" },
+          "free_text": null
+        }
+      ],
+      "known_state": { "identity": "U_ME" },
+      "proposed_call": {
+        "tool": "send_message",
+        "tier": 3,
+        "params": { "channel": "C_TRIAGE", "text": "escalating the incident now" }
+      },
+      "expected": {
+        "verdict": "BLOCK",
+        "spec": "S1.4",
+        "code": "target_not_found",
+        "blocked_write": true,
+        "required_behavior": ["every referent-bearing arg fails grounding; the write never fires"]
+      }
+    },
+    {
+      "id": "R3",
+      "category": "precondition",
+      "tests": ["S19.2", "S17.1"],
+      "provenance": "verbatim-report",
+      "source": "voiceos-intel/07-discord-feedback-goldmine.md:21 — Gabe: 'when I input the key it's not saving properly and/or getting called properly'; hob1: 'it doesnt work for me now either.' Ask: make token-saved state explicit + a connection test.",
+      "rationale": "Not parameter drift: state the system claims (token saved) vs state that is true (provider rejects). Gate must surface a not_connected-class card instead of firing the write blind.",
+      "x_preconditions": ["connection_verified(beeper)"],
+      "transcript": { "tokens": ["tell", "the", "group", "chat", "im", "running", "late"] },
+      "prior_tool_outputs": [
+        {
+          "referent_id": "r_auth",
+          "tool": "connection_test",
+          "ts": "2026-08-21T16:59:00-07:00",
+          "structural": { "type": "auth_status", "integration": "beeper", "token_present": true, "ok": false },
+          "free_text": null
+        },
+        {
+          "referent_id": "r_group",
+          "tool": "list_channels",
+          "ts": "2026-08-21T16:50:00-07:00",
+          "structural": { "type": "channel", "name": "group-chat", "channel_id": "B_GROUP" },
+          "free_text": null
+        }
+      ],
+      "known_state": { "identity": "U_ME", "vault": { "beeper_token_present": true } },
+      "proposed_call": { "tool": "send_message", "tier": 3, "params": { "channel": "B_GROUP", "text": "running late" } },
+      "expected": {
+        "verdict": "CARD",
+        "spec": "S19.2",
+        "code": "not_connected",
+        "card_question": "Beeper isn't connected — the saved key fails a connection test. Reconnect?",
+        "blocked_write": true
+      }
+    },
+    {
+      "id": "R4",
+      "category": "precondition",
+      "tests": ["S19.2"],
+      "provenance": "verbatim-report",
+      "source": "voiceos-intel/07-discord-feedback-goldmine.md:28 — hob1: 'It also doesn't work when beeper isn't open... will see if we can get voiceos to start beeper in the background if it needs to call it.'",
+      "rationale": "Environment invariant backing the call is false (app not running). Expected: repair-card before the write, not a downstream error.",
+      "x_preconditions": ["app_running(beeper)"],
+      "transcript": { "tokens": ["message", "the", "group", "chat", "on", "my", "way"] },
+      "prior_tool_outputs": [
+        {
+          "referent_id": "r_group",
+          "tool": "list_channels",
+          "ts": "2026-08-21T16:50:00-07:00",
+          "structural": { "type": "channel", "name": "group-chat", "channel_id": "B_GROUP" },
+          "free_text": null
+        }
+      ],
+      "known_state": { "identity": "U_ME", "running_apps": ["slack", "chrome"] },
+      "proposed_call": { "tool": "send_message", "tier": 3, "params": { "channel": "B_GROUP", "text": "on my way" } },
+      "expected": {
+        "verdict": "CARD",
+        "spec": "S19.2",
+        "code": "precondition_failed",
+        "card_question": "Beeper isn't open — open it and send?",
+        "blocked_write": true
+      }
+    },
+    {
+      "id": "R5",
+      "category": "misheard-target",
+      "tests": ["S14.2"],
+      "provenance": "verbatim-report",
+      "source": "voiceos-intel/07-discord-feedback-goldmine.md:39 (symptom) + deep/20-audio-dictation.md (root cause verified: session pinned to ONE Deepgram language code, so JP/EN code-switching degrades structurally). Specific utterance reconstructed, per the source doc.",
+      "rationale": "The canonical ASR source of a wrong name reaching a tool arg: mixed JP/EN proper noun mis-decoded; directory holds 田中/Tanaka.",
+      "transcript": {
+        "tokens": ["message", "tanika", "san", "about", "the", "meeting"],
+        "descriptor": { "text": "tanika", "token": "t1" }
+      },
+      "prior_tool_outputs": [
+        {
+          "referent_id": "r_tanaka",
+          "tool": "contacts_list",
+          "ts": "2026-08-21T16:45:00-07:00",
+          "structural": { "type": "user", "name": "Tanaka Ken", "user_id": "U_TANAKA", "email": "tanaka.ken@acme.jp", "aliases": ["田中健"] },
+          "free_text": null
+        },
+        {
+          "referent_id": "r_sato",
+          "tool": "contacts_list",
+          "ts": "2026-08-21T16:45:01-07:00",
+          "structural": { "type": "user", "name": "Sato Yui", "user_id": "U_SATO", "email": "sato.yui@acme.jp" },
+          "free_text": null
+        }
+      ],
+      "known_state": { "identity": "U_ME" },
+      "proposed_call": { "tool": "send_message", "tier": 3, "params": { "recipient": "Tanika Ken", "text": "about the meeting" } },
+      "expected": {
+        "verdict": "BLOCK",
+        "spec": "S14.2",
+        "code": "target_not_found",
+        "blocked_write": true,
+        "required_behavior": ["no silent pick; near names (Tanaka Ken) surfaced as candidates-as-data"]
+      }
+    },
+    {
+      "id": "R6",
+      "category": "misheard-target",
+      "tests": ["S14.2", "S1.4"],
+      "provenance": "reconstructed",
+      "source": "drift family misheard_target in universal-voiceos-oauth/tools/preflight-eval.mjs (10 fixtures measured 10/10 this session), promoted to a named replay fixture per replay-corpus-candidates.md R6.",
+      "rationale": "'ing backend' against a workspace with #eng-backend: a plausible mis-hearing of a real name, not a random string.",
+      "transcript": { "tokens": ["send", "deploy", "is", "done", "to", "ing", "backend"], "descriptor": { "text": "ing backend", "token": "t5" } },
+      "prior_tool_outputs": [
+        { "referent_id": "r_c1", "tool": "list_channels", "ts": "2026-08-21T16:40:00-07:00", "structural": { "type": "channel", "name": "general", "channel_id": "C0GEN" }, "free_text": null },
+        { "referent_id": "r_c2", "tool": "list_channels", "ts": "2026-08-21T16:40:00-07:00", "structural": { "type": "channel", "name": "eng-backend", "channel_id": "C0ENGB" }, "free_text": null },
+        { "referent_id": "r_c3", "tool": "list_channels", "ts": "2026-08-21T16:40:00-07:00", "structural": { "type": "channel", "name": "eng-frontend", "channel_id": "C0ENGF" }, "free_text": null },
+        { "referent_id": "r_c4", "tool": "list_channels", "ts": "2026-08-21T16:40:00-07:00", "structural": { "type": "channel", "name": "design", "channel_id": "C0DESIGN" }, "free_text": null }
+      ],
+      "known_state": { "identity": "U_ME" },
+      "proposed_call": { "tool": "send_message", "tier": 3, "params": { "channel": "ing backend", "text": "deploy is done" } },
+      "expected": {
+        "verdict": "BLOCK",
+        "spec": "S14.2",
+        "code": "target_not_found",
+        "blocked_write": true,
+        "required_behavior": ["#eng-backend surfaced among the near-name candidates"]
+      }
+    },
+    {
+      "id": "R7",
+      "category": "ambiguous-target",
+      "tests": ["S10.3", "S14.2"],
+      "provenance": "reconstructed",
+      "source": "drift family ambiguous_target in preflight-eval.mjs (measured 10/10), per replay-corpus-candidates.md R7. Mirrors SPEC §14 'the wrong Alex' and demo Act 2 verbatim.",
+      "rationale": "'Arav' matching both Arav Patel and Arav Kumar — must ask with candidates-as-data, never pick. Spec-terminal form is a disambiguation card (S10.3e); the v3 convention this corpus inherits scores the blocked write as the catch.",
+      "transcript": { "tokens": ["tell", "arav", "the", "demo", "is", "ready"], "descriptor": { "text": "arav", "token": "t1" } },
+      "prior_tool_outputs": [
+        { "referent_id": "r_p1", "tool": "contacts_list", "ts": "2026-08-21T16:45:00-07:00", "structural": { "type": "user", "name": "Arav Patel", "user_id": "U0ARAVP" }, "free_text": null },
+        { "referent_id": "r_p2", "tool": "contacts_list", "ts": "2026-08-21T16:45:01-07:00", "structural": { "type": "user", "name": "Arav Kumar", "user_id": "U0ARAVK" }, "free_text": null }
+      ],
+      "known_state": { "identity": "U_ME" },
+      "proposed_call": { "tool": "send_message", "tier": 3, "params": { "recipient": "Arav", "text": "the demo is ready" } },
+      "expected": {
+        "verdict": "BLOCK",
+        "spec": "S10.3",
+        "code": "ambiguous_target",
+        "blocked_write": true,
+        "required_behavior": ["both real candidates carried as data (CandidateSummary), never a coin flip"]
+      }
+    },
+    {
+      "id": "R8",
+      "category": "ungrounded-ref",
+      "tests": ["S1.4", "S10.3"],
+      "provenance": "reconstructed",
+      "source": "drift family ungrounded_ref in preflight-eval.mjs (measured 10/10), per replay-corpus-candidates.md R8: a timestamp with the right SHAPE that no read ever surfaced — 'the failure mode a model produces when it is being helpful.' Same mechanism as R1's verified root cause.",
+      "rationale": "React to a message id no read ever surfaced: plausible-shaped, fully ungrounded.",
+      "transcript": { "tokens": ["react", "to", "that", "with", "a", "thumbs", "up"], "descriptor": { "text": "that", "token": "t2" } },
+      "prior_tool_outputs": [],
+      "known_state": { "identity": "U_ME" },
+      "proposed_call": { "tool": "add_reaction", "tier": 2, "params": { "message_id": "1755312345.000123", "emoji": "thumbsup" } },
+      "expected": {
+        "verdict": "BLOCK",
+        "spec": "S1.4",
+        "code": "ungrounded_message",
+        "blocked_write": true
+      }
+    },
+    {
+      "id": "R9",
+      "category": "unresolvable-time",
+      "tests": ["S3.2"],
+      "provenance": "reconstructed",
+      "source": "drift family unresolvable_time in preflight-eval.mjs (measured 10/10), per replay-corpus-candidates.md R9.",
+      "rationale": "'Monday morning' has no closed form; the grammar must reject it and ask — never default, never fire.",
+      "transcript": { "tokens": ["schedule", "the", "kickoff", "note", "for", "monday", "morning"], "descriptor": { "text": "monday morning", "token": "t5" } },
+      "prior_tool_outputs": [
+        { "referent_id": "r_gen", "tool": "list_channels", "ts": "2026-08-21T16:40:00-07:00", "structural": { "type": "channel", "name": "general", "channel_id": "C0GEN" }, "free_text": null }
+      ],
+      "known_state": { "identity": "U_ME" },
+      "proposed_call": { "tool": "schedule_message", "tier": 3, "params": { "channel": "C0GEN", "post_at": "monday morning", "text": "kickoff at ten" } },
+      "expected": {
+        "verdict": "BLOCK",
+        "spec": "S3.2",
+        "code": "ambiguous_time",
+        "blocked_write": true,
+        "required_behavior": ["spec-terminal form is the one-question micro-card (S3.2); the write must not fire either way"]
+      }
+    },
+    {
+      "id": "R10",
+      "category": "dropped-param",
+      "tests": ["S1.4"],
+      "provenance": "reconstructed",
+      "source": "drift family dropped_param in preflight-eval.mjs (measured 10/10), per replay-corpus-candidates.md R10 (empty-target variant).",
+      "rationale": "A required routing field arrives blank; a block is the only honest response — never a default.",
+      "transcript": { "tokens": ["send", "the", "update"] },
+      "prior_tool_outputs": [
+        { "referent_id": "r_gen", "tool": "list_channels", "ts": "2026-08-21T16:40:00-07:00", "structural": { "type": "channel", "name": "general", "channel_id": "C0GEN" }, "free_text": null }
+      ],
+      "known_state": { "identity": "U_ME" },
+      "proposed_call": { "tool": "send_message", "tier": 3, "params": { "target": "", "text": "update posted" } },
+      "expected": {
+        "verdict": "BLOCK",
+        "spec": "S1.4",
+        "code": "missing_parameter",
+        "blocked_write": true
+      }
+    },
+    {
+      "id": "R11",
+      "category": "number-twin-unit",
+      "tests": ["S15.1", "S1.2"],
+      "provenance": "reconstructed",
+      "source": "voiceos-intel/01-integration-contract.md §7 — the old Stripe build's keyless fail-closed verify(said, amountDollars) gate, demoed to the founders (blocks if spoken $ and filled $ differ beyond $0.005). Pattern is real; no user-reported incident behind it, per the source doc.",
+      "rationale": "The money moment: user said fifty, the call carries 15 — the §6/§15 fifty→fifteen hazard as a filled-amount mismatch.",
+      "transcript": { "tokens": ["send", "fifty", "dollars", "to", "sam"], "descriptor": { "text": "fifty dollars", "token": "t1" } },
+      "prior_tool_outputs": [
+        { "referent_id": "r_sam", "tool": "payees_list", "ts": "2026-08-21T16:50:00-07:00", "structural": { "type": "payee", "name": "Sam Ortiz", "payee_id": "P_SAM" }, "free_text": null }
+      ],
+      "known_state": { "identity": "U_ME" },
+      "proposed_call": { "tool": "send_payment", "tier": 3, "params": { "payee": "P_SAM", "amount_usd": 15 } },
+      "expected": {
+        "verdict": "BLOCK",
+        "spec": "S15.1",
+        "code": "amount_mismatch",
+        "blocked_write": true
+      }
+    }
+  ]
+}

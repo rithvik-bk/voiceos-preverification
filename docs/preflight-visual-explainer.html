@@ -1,0 +1,550 @@
+<title>Preflight, Explained</title>
+<style>
+  :root{
+    --paper:#F5F1E7; --paper-2:#EEE8DA; --card:#FBF8F1;
+    --ink:#1B1813; --ink-soft:#4A453B; --ink-faint:#8A8272;
+    --rule:#D8CFBB;
+    --pass:#3F6B4A; --pass-bg:#E6EEE4;
+    --block:#A63B27; --block-bg:#F3E2DC;
+    --hold:#B07A16; --hold-bg:#F4E9CE;
+    --accent:#2E4A5A; --accent-bg:#E2E9EC;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--serif); font-size:19px; line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px; margin:0 auto; padding:0 24px 120px}
+  header.hero{max-width:760px; margin:0 auto; padding:72px 24px 40px}
+  .eyebrow{font-family:var(--sans); font-size:12.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 18px}
+  h1{font-size:clamp(34px,6vw,52px); line-height:1.06; letter-spacing:-.01em; margin:0 0 18px; text-wrap:balance}
+  .dek{font-size:21px; color:var(--ink-soft); margin:0; max-width:60ch}
+  h2{font-size:clamp(25px,4vw,32px); line-height:1.12; letter-spacing:-.01em; margin:64px 0 6px; text-wrap:balance}
+  h2 .num{font-family:var(--mono); font-size:15px; color:var(--accent); display:block; letter-spacing:.06em; margin-bottom:8px; font-weight:600}
+  h3{font-size:20px; margin:36px 0 4px; font-style:italic; color:var(--ink)}
+  p{margin:14px 0; max-width:64ch}
+  strong{font-weight:600}
+  .lead{font-size:22px; line-height:1.5}
+  .mono{font-family:var(--mono); font-size:.86em; background:var(--paper-2); padding:1px 6px; border-radius:4px}
+  .say{font-family:var(--mono); font-size:.86em; color:var(--accent)}
+  hr.div{border:none; border-top:1px solid var(--rule); margin:56px 0 0}
+  figure{margin:34px 0; padding:0}
+  figcaption{font-family:var(--sans); font-size:13.5px; color:var(--ink-faint); margin-top:12px; text-align:center; line-height:1.5}
+  .card{background:var(--card); border:1px solid var(--rule); border-radius:14px; padding:26px 28px; margin:28px 0}
+  .card h3{margin-top:0}
+  svg{display:block; width:100%; height:auto; overflow:visible}
+  .figbox{background:var(--card); border:1px solid var(--rule); border-radius:14px; padding:30px 26px}
+  .tag{font-family:var(--sans); font-weight:600; font-size:12px; letter-spacing:.04em; padding:3px 9px; border-radius:999px; display:inline-block; vertical-align:middle}
+  .t-pass{background:var(--pass-bg); color:var(--pass)}
+  .t-block{background:var(--block-bg); color:var(--block)}
+  .t-hold{background:var(--hold-bg); color:var(--hold)}
+  .two{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin:28px 0}
+  @media(max-width:620px){.two{grid-template-columns:1fr}}
+  .mini{background:var(--card); border:1px solid var(--rule); border-radius:12px; padding:20px}
+  .mini .top{font-family:var(--sans); font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:10px}
+  .kicker{font-family:var(--sans); font-size:14px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.1em; margin:0 0 6px}
+  ul.clean{list-style:none; padding:0; margin:16px 0}
+  ul.clean li{padding:10px 0 10px 30px; position:relative; border-bottom:1px solid var(--rule); max-width:64ch}
+  ul.clean li:last-child{border-bottom:none}
+  ul.clean li::before{content:""; position:absolute; left:4px; top:19px; width:8px; height:8px; border-radius:50%; background:var(--accent)}
+  .callout{background:var(--accent-bg); border-left:3px solid var(--accent); border-radius:0 10px 10px 0; padding:18px 22px; margin:26px 0; font-size:18px}
+  .callout .kicker{color:var(--accent)}
+  .oneline{font-family:var(--serif); font-style:italic; font-size:24px; line-height:1.4; color:var(--ink); text-align:center; margin:10px auto; max-width:30ch}
+  .toc{font-family:var(--sans); font-size:15px; color:var(--ink-soft); background:var(--card); border:1px solid var(--rule); border-radius:12px; padding:18px 22px; margin:34px 0}
+  .toc a{color:var(--accent); text-decoration:none} .toc a:hover{text-decoration:underline}
+  .toc ol{margin:8px 0 0; padding-left:22px} .toc li{margin:5px 0}
+</style>
+
+<header class="hero">
+  <p class="eyebrow">Preflight · for VoiceOS · a plain-language, picture-first walkthrough</p>
+  <h1>The thing that lets a voice assistant do real work — safely.</h1>
+  <p class="dek">Zero to a hundred, one idea at a time, every idea drawn. By the end you'll be able to explain this cold — including the tree.</p>
+</header>
+
+<div class="wrap">
+
+  <div class="toc">
+    <strong>What we'll walk through</strong>
+    <ol>
+      <li><a href="#what">What it is (in one picture)</a></li>
+      <li><a href="#why">Why it needs to exist</a></li>
+      <li><a href="#asks">What Jonah &amp; Kai actually asked for</a></li>
+      <li><a href="#check">How the check works (the one question)</a></li>
+      <li><a href="#ladder">Where a detail is allowed to come from</a></li>
+      <li><a href="#examples">It in action: the mishear &amp; the trap</a></li>
+      <li><a href="#ai">"Wait — isn't this AI checking AI?" (no)</a></li>
+      <li><a href="#speed">"Doesn't all this slow it down?" (no)</a></li>
+      <li><a href="#tree">The tree — finally (big tasks)</a></li>
+      <li><a href="#original-vs-new">Original project vs. what it became</a></li>
+      <li><a href="#recap">The whole thing in one breath</a></li>
+    </ol>
+  </div>
+
+  <!-- 1 -->
+  <h2 id="what"><span class="num">01</span>What it is, in one picture</h2>
+  <p class="lead">Put a <strong>bodyguard</strong> between you and the voice assistant. Before the assistant is allowed to actually <em>do</em> anything, the bodyguard asks one question — and only lets it through if the answer is good.</p>
+
+  <figure class="figbox">
+    <svg viewBox="0 0 720 200" role="img" aria-label="You speak to a bodyguard checkpoint, which stands in front of the assistant and the real action.">
+      <!-- you -->
+      <circle cx="60" cy="100" r="26" fill="none" stroke="#1B1813" stroke-width="2"/>
+      <circle cx="60" cy="88" r="9" fill="#1B1813"/>
+      <path d="M42 118 q18 -20 36 0" fill="#1B1813"/>
+      <text x="60" y="160" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="14" fill="#4A453B">You (speak)</text>
+      <!-- arrow -->
+      <line x1="96" y1="100" x2="150" y2="100" stroke="#8A8272" stroke-width="2"/>
+      <polygon points="150,100 140,95 140,105" fill="#8A8272"/>
+      <!-- bodyguard / gate -->
+      <rect x="162" y="52" width="176" height="96" rx="14" fill="#E2E9EC" stroke="#2E4A5A" stroke-width="2"/>
+      <text x="250" y="90" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="15" font-weight="700" fill="#2E4A5A">PREFLIGHT</text>
+      <text x="250" y="112" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="12.5" fill="#2E4A5A">the bodyguard</text>
+      <text x="250" y="171" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="13" fill="#4A453B">checks before anything happens</text>
+      <!-- arrow -->
+      <line x1="350" y1="100" x2="404" y2="100" stroke="#8A8272" stroke-width="2"/>
+      <polygon points="404,100 394,95 394,105" fill="#8A8272"/>
+      <!-- assistant -->
+      <rect x="416" y="66" width="120" height="68" rx="12" fill="#FBF8F1" stroke="#1B1813" stroke-width="2"/>
+      <text x="476" y="96" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="14" font-weight="600" fill="#1B1813">Assistant</text>
+      <text x="476" y="115" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="12" fill="#4A453B">(the AI)</text>
+      <!-- arrow -->
+      <line x1="548" y1="100" x2="602" y2="100" stroke="#8A8272" stroke-width="2"/>
+      <polygon points="602,100 592,95 592,105" fill="#8A8272"/>
+      <!-- action -->
+      <rect x="614" y="66" width="96" height="68" rx="12" fill="#FBF8F1" stroke="#1B1813" stroke-width="2"/>
+      <text x="662" y="96" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="13" font-weight="600" fill="#1B1813">Real</text>
+      <text x="662" y="114" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="13" font-weight="600" fill="#1B1813">action</text>
+    </svg>
+    <figcaption>Nothing reaches the "real action" box without passing the bodyguard first. That's the entire product.</figcaption>
+  </figure>
+
+  <p>The one question the bodyguard asks about every action is:</p>
+  <div class="callout"><p class="kicker">the one question</p><p style="margin:0"><strong>"Did the user actually <em>say</em> this — or did the AI make it up, mishear it, or grab it from somewhere sketchy?"</strong> If it traces back to what you said → let it through. If not → stop, and ask you one quick thing.</p></div>
+
+  <!-- 2 -->
+  <h2 id="why"><span class="num">02</span>Why it needs to exist</h2>
+  <p>Today you'd happily say "set a timer" or "text mom." You would <strong>never</strong> say "pay my invoices" or "wire the vendor." Not because the assistant <em>can't</em> — because you don't <strong>trust</strong> it. One wrong payment is permanent, and you'd never use it again.</p>
+  <figure class="figbox">
+    <svg viewBox="0 0 720 150" role="img" aria-label="A line from low-stakes tasks people trust voice with, to high-stakes tasks they don't.">
+      <line x1="40" y1="90" x2="680" y2="90" stroke="#D8CFBB" stroke-width="3"/>
+      <!-- trusted side -->
+      <circle cx="120" cy="90" r="7" fill="#3F6B4A"/><text x="120" y="70" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="13" fill="#3F6B4A">set a timer</text>
+      <circle cx="250" cy="90" r="7" fill="#3F6B4A"/><text x="250" y="70" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="13" fill="#3F6B4A">quick text</text>
+      <!-- gap -->
+      <text x="400" y="125" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="13.5" font-style="italic" fill="#8A8272">— the trust wall —</text>
+      <line x1="400" y1="55" x2="400" y2="112" stroke="#A63B27" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <!-- untrusted side -->
+      <circle cx="545" cy="90" r="7" fill="#A63B27"/><text x="545" y="70" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="13" fill="#A63B27">pay an invoice</text>
+      <circle cx="650" cy="90" r="7" fill="#A63B27"/><text x="650" y="70" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="13" fill="#A63B27">wire money</text>
+      <text x="150" y="128" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="12.5" fill="#4A453B">low stakes → people trust it</text>
+      <text x="600" y="128" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="12.5" fill="#4A453B">high stakes → nobody dares</text>
+    </svg>
+    <figcaption>Voice is stuck on the left side of the wall. The wall is made of trust, not capability. Preflight is how you cross it.</figcaption>
+  </figure>
+
+  <!-- 3 -->
+  <h2 id="asks"><span class="num">03</span>What Jonah &amp; Kai actually asked for</h2>
+  <div class="two">
+    <div class="mini">
+      <div class="top">Jonah — product taste</div>
+      <ul class="clean" style="margin:0">
+        <li>Real edge cases — his example: a refund of <span class="mono">$54.79</span> going out as <span class="mono">$54.99</span>.</li>
+        <li>A rough draft to sit and shape together — not a finished spec.</li>
+        <li>His biggest worry: when a mistake is caught, how do you tell the user <em>without breaking the voice flow?</em></li>
+      </ul>
+    </div>
+    <div class="mini">
+      <div class="top">Kai — rigor</div>
+      <ul class="clean" style="margin:0">
+        <li>A way to <strong>guarantee</strong> the assistant calls tools correctly.</li>
+        <li>Without slowing it down.</li>
+        <li>And with <strong>no AI grading AI</strong> — he doesn't trust a model that checks a model.</li>
+      </ul>
+    </div>
+  </div>
+  <p>Underneath both: <strong>a reason to trust that the assistant does what you meant.</strong> That's the thing we're building.</p>
+
+  <!-- 4 -->
+  <h2 id="check"><span class="num">04</span>How the check physically happens</h2>
+  <p class="lead">This is the part that actually matters. We're going to follow one sentence — <span class="say">"Send $54.79 to Dan"</span> — from your mouth to the money, and watch exactly where a wrong number can sneak in, and where the check catches it.</p>
+
+  <h3>First: your words pass through <em>two</em> AIs before anything happens</h3>
+  <p>People picture the assistant "hearing you and doing it." It doesn't. Your sentence goes down a pipeline, and <strong>two separate neural networks</strong> rewrite it along the way. Preflight is the one box in this pipeline that is <strong>not</strong> a neural network.</p>
+
+  <figure class="figbox">
+    <svg viewBox="0 0 720 452" role="img" aria-label="A vertical pipeline: you speak, ASR turns speech to text, the LLM re-types an action, Preflight checks it deterministically, then the action fires or holds.">
+      <!-- down spine -->
+      <line x1="150" y1="66" x2="150" y2="404" stroke="#D8CFBB" stroke-width="2"/>
+      <g font-family="ui-sans-serif,system-ui">
+        <!-- 1 you speak -->
+        <rect x="40" y="14" width="220" height="52" rx="11" fill="#E2E9EC" stroke="#2E4A5A"/>
+        <text x="150" y="38" text-anchor="middle" font-size="14" font-weight="700" fill="#2E4A5A">🎤 You speak</text>
+        <text x="150" y="56" text-anchor="middle" font-size="12" fill="#4A453B">audio: "fifty-four seventy-nine…"</text>
+        <text x="290" y="44" font-size="13" fill="#4A453B">Just sound waves. No text yet.</text>
+        <polygon points="150,78 145,68 155,68" fill="#8A8272"/>
+
+        <!-- 2 ASR -->
+        <rect x="40" y="90" width="220" height="60" rx="11" fill="#FBF8F1" stroke="#A63B27"/>
+        <text x="150" y="114" text-anchor="middle" font-size="14" font-weight="700" fill="#1B1813">ASR — speech → text</text>
+        <text x="150" y="132" text-anchor="middle" font-size="11.5" fill="#A63B27">neural network · can mishear</text>
+        <text x="290" y="108" font-size="13" fill="#4A453B">Outputs the <tspan font-weight="700">transcript</tspan> text:</text>
+        <text x="290" y="128" font-family="ui-monospace,monospace" font-size="12.5" fill="#2E4A5A">"send $54.79 to Dan"</text>
+        <text x="290" y="146" font-size="11.5" font-style="italic" fill="#8A8272">⚠ if the audio is misheard here, the transcript itself is wrong</text>
+        <polygon points="150,162 145,152 155,152 " fill="#8A8272"/>
+
+        <!-- 3 LLM -->
+        <rect x="40" y="174" width="220" height="60" rx="11" fill="#FBF8F1" stroke="#A63B27"/>
+        <text x="150" y="198" text-anchor="middle" font-size="14" font-weight="700" fill="#1B1813">LLM — the agent brain</text>
+        <text x="150" y="216" text-anchor="middle" font-size="11.5" fill="#A63B27">neural network · can drift</text>
+        <text x="290" y="192" font-size="13" fill="#4A453B">Reads the transcript, <tspan font-weight="700">re-types</tspan> an action:</text>
+        <text x="290" y="212" font-family="ui-monospace,monospace" font-size="12.5" fill="#A63B27">{ who:"Dan", amount:"54.99" }</text>
+        <text x="290" y="230" font-size="11.5" font-style="italic" fill="#8A8272">⚠ a correct transcript can still come out with a wrong number</text>
+        <polygon points="150,246 145,236 155,236" fill="#8A8272"/>
+
+        <!-- 4 preflight -->
+        <rect x="40" y="258" width="220" height="60" rx="11" fill="#E2E9EC" stroke="#2E4A5A" stroke-width="2"/>
+        <text x="150" y="282" text-anchor="middle" font-size="14" font-weight="700" fill="#2E4A5A">PREFLIGHT — the check</text>
+        <text x="150" y="300" text-anchor="middle" font-size="11.5" fill="#3F6B4A">plain code · cannot drift</text>
+        <text x="290" y="278" font-size="13" fill="#4A453B">Compares the action's values back</text>
+        <text x="290" y="296" font-size="13" fill="#4A453B">to the transcript. <tspan font-family="ui-monospace,monospace" font-size="12.5" fill="#A63B27">54.99</tspan> is not in</text>
+        <text x="290" y="314" font-size="13" fill="#4A453B"><tspan font-family="ui-monospace,monospace" font-size="12.5">{54.79}</tspan> → stop.</text>
+        <polygon points="150,330 145,320 155,320" fill="#8A8272"/>
+
+        <!-- 5 result -->
+        <rect x="40" y="342" width="220" height="56" rx="11" fill="#F4E9CE" stroke="#B07A16"/>
+        <text x="150" y="366" text-anchor="middle" font-size="14" font-weight="700" fill="#8a5f12">HOLD — ask one question</text>
+        <text x="150" y="384" text-anchor="middle" font-size="11.5" fill="#4A453B">fires only if every value traces back</text>
+        <text x="290" y="374" font-size="13" fill="#4A453B">"You said $54.79 — send that?"</text>
+      </g>
+    </svg>
+    <figcaption>Two of these boxes are neural nets that <em>guess</em> (red). Preflight is the one box that only <em>compares</em> (blue). It sits at the very last moment, right before the action is real.</figcaption>
+  </figure>
+
+  <div class="callout"><p class="kicker">the fact everything hinges on</p><p style="margin:0">The LLM does <strong>not copy your number</strong> into the action. It reads a transcript and <strong>re-generates</strong> the action one token at a time, by sampling the most-likely next piece of text. The <span class="mono">54.79</span> that comes out the other end is a number the model <em>re-typed</em> — not your bytes. Almost always right. Occasionally a digit off. On a payment, "occasionally" is unacceptable — so we check.</p></div>
+
+  <h3>So what world actually turns 54.79 into 54.99? (your question)</h3>
+  <p>It's not random. There are exactly four ways it happens, and it matters which — because three of them slam straight into Preflight, and one of them doesn't (that one is a different layer's job, and we say so out loud):</p>
+  <div class="card" style="padding:6px 0">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 24px;border-bottom:1px solid var(--rule)">
+      <div style="max-width:70%"><strong>Model re-typing drift.</strong> The tokenizer chops <span class="mono">54.79</span> into pieces; when the model regenerates it, it samples a wrong digit. Pure fumble.</div>
+      <span class="tag t-pass">caught</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 24px;border-bottom:1px solid var(--rule)">
+      <div style="max-width:70%"><strong>Context contamination.</strong> Another number was nearby — an invoice on screen said <span class="mono">$54.99</span> — and the model grabbed <em>that</em> one instead of what you said.</div>
+      <span class="tag t-pass">caught</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 24px;border-bottom:1px solid var(--rule)">
+      <div style="max-width:70%"><strong>Injection.</strong> Text it read — an email, a webpage — literally said "pay 54.99," and the model obeyed the page instead of you.</div>
+      <span class="tag t-pass">caught</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 24px">
+      <div style="max-width:70%"><strong>ASR misheard the audio itself.</strong> "seventy-nine" sounded like "ninety-nine," so the <em>transcript</em> already says 54.99. Preflight compares to the transcript, so it can't see this one.</div>
+      <span class="tag t-block">not caught</span>
+    </div>
+  </div>
+  <p style="font-size:16.5px;color:var(--ink-soft)">The honest line — the one Kai will respect: Preflight catches every case where <strong>the transcript kept your number but the action didn't</strong> (drift, contamination, injection). A true mishear, where the transcript is already wrong, is caught by a different mechanism — the ASR's own confidence score and a spoken read-back — not by this layer. We don't pretend one box does everything.</p>
+
+  <h3>The check itself: <span class="mono">indexOf</span>, not intelligence</h3>
+  <p>Here's the physical thing that happens inside the blue box — no model, no network, no judgment. It gets two inputs and runs plain string/number code over them:</p>
+  <figure class="figbox">
+    <svg viewBox="0 0 720 250" role="img" aria-label="Transcript broken into spans on the left, the tool-call arguments on the right; Dan matches a span, 54.99 matches nothing.">
+      <!-- left: transcript spans -->
+      <text x="40" y="26" font-family="ui-sans-serif,system-ui" font-size="12.5" font-weight="700" fill="#2E4A5A">INPUT A — the transcript, as spans</text>
+      <g font-family="ui-monospace,monospace" font-size="13">
+        <rect x="40" y="40" width="90" height="34" rx="7" fill="#EEE8DA" stroke="#D8CFBB"/><text x="85" y="62" text-anchor="middle" fill="#4A453B">send</text>
+        <rect x="40" y="82" width="130" height="34" rx="7" fill="#E6EEE4" stroke="#3F6B4A"/><text x="105" y="104" text-anchor="middle" fill="#3F6B4A">$54.79</text>
+        <rect x="40" y="124" width="60" height="34" rx="7" fill="#EEE8DA" stroke="#D8CFBB"/><text x="70" y="146" text-anchor="middle" fill="#4A453B">to</text>
+        <rect x="40" y="166" width="80" height="34" rx="7" fill="#E6EEE4" stroke="#3F6B4A"/><text x="80" y="188" text-anchor="middle" fill="#3F6B4A">Dan</text>
+      </g>
+      <!-- right: tool-call args -->
+      <text x="470" y="26" font-family="ui-sans-serif,system-ui" font-size="12.5" font-weight="700" fill="#2E4A5A">INPUT B — the action the LLM emitted</text>
+      <g font-family="ui-monospace,monospace" font-size="13">
+        <rect x="470" y="82" width="210" height="40" rx="8" fill="#FBF8F1" stroke="#3F6B4A"/><text x="486" y="107" fill="#1B1813">who = "Dan"</text>
+        <rect x="470" y="150" width="210" height="40" rx="8" fill="#F3E2DC" stroke="#A63B27"/><text x="486" y="175" fill="#A63B27">amount = "54.99"</text>
+      </g>
+      <!-- match line Dan -->
+      <path d="M120 183 C 300 183, 320 102, 470 102" fill="none" stroke="#3F6B4A" stroke-width="2"/>
+      <text x="300" y="150" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="12" fill="#3F6B4A">✓ found "Dan" at a span</text>
+      <!-- no match amount -->
+      <path d="M170 99 C 320 99, 320 170, 470 170" fill="none" stroke="#A63B27" stroke-width="2" stroke-dasharray="5 4"/>
+      <text x="330" y="205" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="12" fill="#A63B27">✗ 54.99 matches no span → HOLD</text>
+    </svg>
+    <figcaption>Left: what you said, sliced into pieces. Right: what the action claims. The check draws a line from each routing value back to a span. "Dan" lands. "54.99" lands on nothing.</figcaption>
+  </figure>
+  <p>Step by step, all of it plain code:</p>
+  <ul class="clean">
+    <li><strong>Normalize.</strong> Turn <span class="mono">"$54.79"</span> into the number <span class="mono">54.79</span>; turn spoken <span class="mono">"fifty-four seventy-nine"</span> into <span class="mono">54.79</span> with a fixed number-words grammar. A rule table, not a model.</li>
+    <li><strong>Search.</strong> For <span class="mono">amount = 54.99</span>, scan the transcript's numbers — <span class="mono">{54.79}</span>. Is 54.99 in there? No. → <span class="mono">amount_not_in_speech</span>. For <span class="mono">who = "Dan"</span>, scan the words for "Dan" (exact match, or off-by-one typo). Found → record <em>which span</em> licensed it.</li>
+    <li><strong>Decide.</strong> Every routing value found a home → fire. Any one didn't → hold and ask. That's the whole verdict.</li>
+  </ul>
+  <p>Every one of those steps is <span class="mono">indexOf</span>, an <span class="mono">editDistance</span>, or a number compare. <strong>A person could run it by hand with a highlighter</strong> and get the same answer. Same inputs → same output, every single time. That is precisely why it is not "an AI checking an AI": there is no second model, no opinion, nothing to hallucinate — just a comparison you could verify yourself.</p>
+
+  <h3>One more piece: not every value gets this treatment</h3>
+  <p>The action has parts, and they're not equally dangerous. The check only guards the ones that can hurt you.</p>
+  <figure class="figbox">
+    <svg viewBox="0 0 720 210" role="img" aria-label="An action broken into a tool plus its details, with routing details flagged as the dangerous ones.">
+      <rect x="40" y="24" width="640" height="46" rx="10" fill="#EEE8DA" stroke="#D8CFBB"/>
+      <text x="60" y="52" font-family="ui-monospace,monospace" font-size="16" fill="#1B1813">send_money(  who = "Dan",   amount = "$54.79",   note = "" )</text>
+      <text x="60" y="96" font-family="ui-sans-serif,system-ui" font-size="13" font-weight="700" fill="#2E4A5A">THE TOOL</text>
+      <line x1="58" y1="104" x2="150" y2="104" stroke="#2E4A5A" stroke-width="2"/>
+      <text x="60" y="122" font-family="ui-sans-serif,system-ui" font-size="12.5" fill="#4A453B">what kind of action</text>
+
+      <rect x="255" y="112" width="215" height="80" rx="10" fill="#F3E2DC" stroke="#A63B27"/>
+      <text x="362" y="136" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="13" font-weight="700" fill="#A63B27">ROUTING DETAILS</text>
+      <text x="362" y="156" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="12.5" fill="#4A453B">who · where · when · how-much</text>
+      <text x="362" y="178" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="12.5" font-style="italic" fill="#A63B27">the dangerous ones — every one must trace back</text>
+
+      <rect x="500" y="112" width="180" height="80" rx="10" fill="#E6EEE4" stroke="#3F6B4A"/>
+      <text x="590" y="136" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="13" font-weight="700" fill="#3F6B4A">CONTENT</text>
+      <text x="590" y="156" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="12.5" fill="#4A453B">the words / the message</text>
+      <text x="590" y="178" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="12.5" font-style="italic" fill="#3F6B4A">less risky — just shown to you</text>
+    </svg>
+    <figcaption>A wrong <strong>who</strong> or <strong>amount</strong> sends money to the wrong place. A slightly-off <strong>note</strong> doesn't. So routing values must trace back exactly; content is just surfaced for you to see.</figcaption>
+  </figure>
+
+  <!-- 5 -->
+  <h2 id="ladder"><span class="num">05</span>Where a detail is <em>allowed</em> to come from</h2>
+  <p>Not every source is trustworthy. The bodyguard ranks them. A routing detail — especially a <strong>destination</strong> (who gets the money) — has to come from near the top.</p>
+  <figure class="figbox">
+    <svg viewBox="0 0 720 300" role="img" aria-label="A ranked ladder of sources from most trusted (what you said) to least (made up).">
+      <!-- rungs -->
+      <g font-family="ui-sans-serif,system-ui">
+        <rect x="60" y="20" width="600" height="46" rx="9" fill="#E6EEE4" stroke="#3F6B4A"/>
+        <text x="80" y="49" font-size="15" font-weight="700" fill="#3F6B4A">1 · What you SAID</text>
+        <text x="640" y="49" text-anchor="end" font-size="12.5" fill="#3F6B4A">can do anything, incl. destinations</text>
+
+        <rect x="60" y="74" width="600" height="46" rx="9" fill="#EEF3E9" stroke="#6E8A63"/>
+        <text x="80" y="103" font-size="15" font-weight="700" fill="#4A453B">2 · A tool RESULT it read back to you</text>
+        <text x="640" y="103" text-anchor="end" font-size="12.5" fill="#4A453B">e.g. a lead a search returned &amp; showed you</text>
+
+        <rect x="60" y="128" width="600" height="46" rx="9" fill="#F1EEE3" stroke="#B9AE93"/>
+        <text x="80" y="157" font-size="15" font-weight="700" fill="#4A453B">3 · Known state</text>
+        <text x="640" y="157" text-anchor="end" font-size="12.5" fill="#4A453B">your real contacts, your channels</text>
+
+        <rect x="60" y="182" width="600" height="46" rx="9" fill="#F4E9CE" stroke="#B07A16"/>
+        <text x="80" y="211" font-size="15" font-weight="700" fill="#8a5f12">4 · Something on your SCREEN / text it read</text>
+        <text x="640" y="211" text-anchor="end" font-size="12.5" fill="#8a5f12">can fill a message — never a destination</text>
+
+        <rect x="60" y="236" width="600" height="46" rx="9" fill="#F3E2DC" stroke="#A63B27"/>
+        <text x="80" y="265" font-size="15" font-weight="700" fill="#A63B27">5 · Made up out of nowhere</text>
+        <text x="640" y="265" text-anchor="end" font-size="12.5" fill="#A63B27">blocked — no trace, no action</text>
+      </g>
+    </svg>
+    <figcaption>The rule that does most of the work: <strong>a destination must come from the top of the ladder. Text the AI merely read can never become a destination</strong> — that's how you stop it being tricked.</figcaption>
+  </figure>
+
+  <!-- 6 -->
+  <h2 id="examples"><span class="num">06</span>Watch it work — the mishear and the trap</h2>
+
+  <h3>The mishear (Jonah's $54.79)</h3>
+  <figure class="figbox">
+    <svg viewBox="0 0 720 170" role="img" aria-label="You said $54.79, the assistant set $54.99, the gate compares and holds.">
+      <rect x="30" y="30" width="200" height="60" rx="12" fill="#E2E9EC" stroke="#2E4A5A"/>
+      <text x="130" y="56" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="13" fill="#2E4A5A">you said</text>
+      <text x="130" y="78" text-anchor="middle" font-family="ui-monospace,monospace" font-size="18" font-weight="700" fill="#1B1813">$54.79</text>
+
+      <rect x="30" y="100" width="200" height="60" rx="12" fill="#FBF8F1" stroke="#8A8272"/>
+      <text x="130" y="126" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="13" fill="#4A453B">assistant set</text>
+      <text x="130" y="148" text-anchor="middle" font-family="ui-monospace,monospace" font-size="18" font-weight="700" fill="#A63B27">$54.99</text>
+
+      <line x1="230" y1="95" x2="300" y2="95" stroke="#8A8272" stroke-width="2"/><polygon points="300,95 290,90 290,100" fill="#8A8272"/>
+      <rect x="305" y="55" width="150" height="80" rx="12" fill="#F4E9CE" stroke="#B07A16"/>
+      <text x="380" y="88" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="13" fill="#8a5f12">54.99 is not</text>
+      <text x="380" y="107" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="13" fill="#8a5f12">what you said</text>
+      <line x1="455" y1="95" x2="520" y2="95" stroke="#8A8272" stroke-width="2"/><polygon points="520,95 510,90 510,100" fill="#8A8272"/>
+      <rect x="525" y="55" width="170" height="80" rx="12" fill="#F4E9CE" stroke="#B07A16"/>
+      <text x="610" y="82" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="14" font-weight="700" fill="#8a5f12">HOLD</text>
+      <text x="610" y="103" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="12" fill="#4A453B">"You said $54.79 —</text>
+      <text x="610" y="119" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="12" fill="#4A453B">which amount?"</text>
+    </svg>
+    <figcaption><span class="tag t-hold">HOLD</span> Nothing sends. It asks one line. You say the right number, it fires. Without the bodyguard, $54.99 just goes out.</figcaption>
+  </figure>
+
+  <h3>The trap (an injected destination)</h3>
+  <figure class="figbox">
+    <svg viewBox="0 0 720 180" role="img" aria-label="An email on screen contains a scammer address; the assistant grabs it; the gate blocks because a destination can't come from read text.">
+      <rect x="30" y="34" width="230" height="112" rx="10" fill="#FBF8F1" stroke="#8A8272"/>
+      <text x="45" y="58" font-family="ui-sans-serif,system-ui" font-size="12" fill="#8A8272">📧 email on your screen</text>
+      <line x1="45" y1="70" x2="245" y2="70" stroke="#EEE8DA"/>
+      <text x="45" y="92" font-family="ui-sans-serif,system-ui" font-size="12.5" fill="#4A453B">"...please remit payment to</text>
+      <text x="45" y="112" font-family="ui-monospace,monospace" font-size="13" fill="#A63B27">scammer@evil.com"</text>
+      <text x="45" y="134" font-family="ui-sans-serif,system-ui" font-size="11.5" font-style="italic" fill="#8A8272">(you never said this address)</text>
+
+      <path d="M262 90 C 290 90, 290 90, 315 90" stroke="#A63B27" stroke-width="2" stroke-dasharray="5 4" fill="none"/><polygon points="315,90 305,85 305,95" fill="#A63B27"/>
+      <rect x="320" y="60" width="150" height="60" rx="12" fill="#FBF8F1" stroke="#8A8272"/>
+      <text x="395" y="86" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="12.5" fill="#4A453B">assistant tries</text>
+      <text x="395" y="105" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="12.5" fill="#4A453B">to pay it</text>
+
+      <line x1="470" y1="90" x2="535" y2="90" stroke="#8A8272" stroke-width="2"/><polygon points="535,90 525,85 525,95" fill="#8A8272"/>
+      <rect x="540" y="52" width="155" height="76" rx="12" fill="#F3E2DC" stroke="#A63B27"/>
+      <text x="617" y="80" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="14" font-weight="700" fill="#A63B27">BLOCK</text>
+      <text x="617" y="101" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="11.5" fill="#4A453B">a destination can't come</text>
+      <text x="617" y="116" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="11.5" fill="#4A453B">from text it just read</text>
+    </svg>
+    <figcaption><span class="tag t-block">BLOCK</span> The address only ever appeared in read text (bottom of the ladder). A destination must come from your mouth — so obeying the email is impossible <em>by rule</em>, not by a guess.</figcaption>
+  </figure>
+
+  <!-- 7 -->
+  <h2 id="ai"><span class="num">07</span>"Wait — isn't this just AI checking AI?"</h2>
+  <p>No — and this is the part Kai cares about most. There is <strong>no second AI</strong> anywhere in the check. The bodyguard is a <strong>rulebook</strong>: it compares the value to your words and looks up where it came from. Same input always gives the same answer, forever.</p>
+  <div class="two">
+    <div class="mini">
+      <div class="top" style="color:#A63B27">what we are NOT doing</div>
+      <svg viewBox="0 0 300 120" aria-label="An AI checking another AI, marked with an X.">
+        <rect x="15" y="40" width="90" height="44" rx="9" fill="#FBF8F1" stroke="#8A8272"/><text x="60" y="67" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="12" fill="#4A453B">AI #1</text>
+        <line x1="105" y1="62" x2="150" y2="62" stroke="#8A8272" stroke-width="2"/>
+        <rect x="150" y="40" width="90" height="44" rx="9" fill="#FBF8F1" stroke="#8A8272"/><text x="195" y="67" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="12" fill="#4A453B">AI #2 grades it</text>
+        <line x1="30" y1="30" x2="255" y2="95" stroke="#A63B27" stroke-width="3"/><line x1="255" y1="30" x2="30" y2="95" stroke="#A63B27" stroke-width="3"/>
+      </svg>
+      <p style="font-size:14px;margin:8px 0 0;color:#4A453B">A guessing machine grading a guessing machine — still a guess.</p>
+    </div>
+    <div class="mini">
+      <div class="top" style="color:#3F6B4A">what we ARE doing</div>
+      <svg viewBox="0 0 300 120" aria-label="A tool call compared against a fixed rulebook, giving a definite yes or no.">
+        <rect x="10" y="40" width="80" height="44" rx="9" fill="#FBF8F1" stroke="#8A8272"/><text x="50" y="67" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="12" fill="#4A453B">the action</text>
+        <line x1="90" y1="62" x2="128" y2="62" stroke="#8A8272" stroke-width="2"/>
+        <rect x="128" y="34" width="80" height="56" rx="9" fill="#E2E9EC" stroke="#2E4A5A"/><text x="168" y="58" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="12" font-weight="700" fill="#2E4A5A">RULEBOOK</text><text x="168" y="76" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="10.5" fill="#2E4A5A">(fixed logic)</text>
+        <line x1="208" y1="62" x2="246" y2="62" stroke="#8A8272" stroke-width="2"/>
+        <text x="272" y="67" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="13" font-weight="700" fill="#3F6B4A">yes/no</text>
+      </svg>
+      <p style="font-size:14px;margin:8px 0 0;color:#4A453B">A fixed rule, checkable by hand, reproducible on any laptop.</p>
+    </div>
+  </div>
+  <p>So when Kai asks "how do I know it's right?" — he can run it himself and get the identical answer every time. That's <em>proof</em>, not a second opinion.</p>
+
+  <!-- 8 -->
+  <h2 id="speed"><span class="num">08</span>"Doesn't all this checking slow it down?"</h2>
+  <p>No — because there's no AI and no internet in the check, just a quick comparison. We measured it: <strong>about 5 millionths of a second</strong> per action. The action itself (actually sending the message) takes <em>seconds</em>. The check is invisible on the clock.</p>
+  <figure class="figbox">
+    <svg viewBox="0 0 720 96" role="img" aria-label="The check is a tiny sliver next to the seconds a real action takes.">
+      <text x="20" y="34" font-family="ui-sans-serif,system-ui" font-size="13" fill="#4A453B">the real action (sending, paying…)</text>
+      <rect x="20" y="42" width="600" height="26" rx="6" fill="#EEE8DA" stroke="#D8CFBB"/>
+      <text x="628" y="60" font-family="ui-sans-serif,system-ui" font-size="13" fill="#4A453B">~seconds</text>
+      <rect x="20" y="42" width="3" height="26" rx="1.5" fill="#2E4A5A"/>
+      <text x="30" y="88" font-family="ui-sans-serif,system-ui" font-size="12.5" fill="#2E4A5A">↑ the whole Preflight check (~0.000005s) — this sliver</text>
+    </svg>
+    <figcaption>Kai's "without sacrificing speed" — met. The check is thousands of times faster than the thing it's checking.</figcaption>
+  </figure>
+
+  <!-- 9 -->
+  <h2 id="tree"><span class="num">09</span>The tree — finally</h2>
+  <p class="lead">You said you never saw a tree. Right — because a tree only appears for <strong>big tasks</strong>, and everything so far was <strong>one action</strong>.</p>
+  <div class="two">
+    <div class="mini">
+      <div class="top">one action</div>
+      <svg viewBox="0 0 300 90" aria-label="A single action, a single check, no tree.">
+        <rect x="90" y="26" width="120" height="40" rx="9" fill="#E6EEE4" stroke="#3F6B4A"/>
+        <text x="150" y="51" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="13" fill="#3F6B4A">✓ one check</text>
+      </svg>
+      <p style="font-size:14px;margin:8px 0 0;color:#4A453B">"Text Dan." → one check. No tree needed.</p>
+    </div>
+    <div class="mini">
+      <div class="top">a big task = many actions</div>
+      <svg viewBox="0 0 300 90" aria-label="Many actions in a row, each a check.">
+        <g>
+          <rect x="8" y="30" width="46" height="32" rx="7" fill="#E6EEE4" stroke="#3F6B4A"/><text x="31" y="51" text-anchor="middle" font-size="13" fill="#3F6B4A">✓</text>
+          <rect x="66" y="30" width="46" height="32" rx="7" fill="#E6EEE4" stroke="#3F6B4A"/><text x="89" y="51" text-anchor="middle" font-size="13" fill="#3F6B4A">✓</text>
+          <rect x="124" y="30" width="46" height="32" rx="7" fill="#F4E9CE" stroke="#B07A16"/><text x="147" y="51" text-anchor="middle" font-size="13" fill="#8a5f12">🚩</text>
+          <rect x="182" y="30" width="46" height="32" rx="7" fill="#E6EEE4" stroke="#3F6B4A"/><text x="205" y="51" text-anchor="middle" font-size="13" fill="#3F6B4A">✓</text>
+          <rect x="240" y="30" width="46" height="32" rx="7" fill="#E6EEE4" stroke="#3F6B4A"/><text x="263" y="51" text-anchor="middle" font-size="13" fill="#3F6B4A">✓</text>
+        </g>
+      </svg>
+      <p style="font-size:14px;margin:8px 0 0;color:#4A453B">"Do my whole inbox." → 40 actions. The <strong>tree</strong> is just this checklist.</p>
+    </div>
+  </div>
+
+  <p>Here's a real example. You say: <span class="say">"Go through my inbox, find every lead, reply to each, message the right people, and email me a report."</span> That's one instruction that becomes many steps. The <strong>tree is the map of those steps</strong>, each marked before anything runs:</p>
+
+  <figure class="figbox">
+    <svg viewBox="0 0 720 340" role="img" aria-label="A tree of steps: most green (safe), three flagged, showing the assistant runs the safe ones and stops at the flagged.">
+      <!-- root -->
+      <rect x="270" y="14" width="180" height="40" rx="10" fill="#E2E9EC" stroke="#2E4A5A"/>
+      <text x="360" y="39" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="13" font-weight="700" fill="#2E4A5A">"do my inbox"</text>
+      <!-- lines to steps -->
+      <g stroke="#D8CFBB" stroke-width="2">
+        <line x1="360" y1="54" x2="110" y2="92"/><line x1="360" y1="54" x2="285" y2="92"/><line x1="360" y1="54" x2="435" y2="92"/><line x1="360" y1="54" x2="610" y2="92"/>
+      </g>
+      <!-- row 1 -->
+      <g font-family="ui-sans-serif,system-ui" font-size="12">
+        <rect x="40" y="92" width="150" height="46" rx="9" fill="#E6EEE4" stroke="#3F6B4A"/><text x="115" y="112" text-anchor="middle" fill="#3F6B4A" font-weight="700">✓ read inbox</text><text x="115" y="128" text-anchor="middle" fill="#4A453B">allowed</text>
+        <rect x="210" y="92" width="150" height="46" rx="9" fill="#E6EEE4" stroke="#3F6B4A"/><text x="285" y="112" text-anchor="middle" fill="#3F6B4A" font-weight="700">✓ find leads</text><text x="285" y="128" text-anchor="middle" fill="#4A453B">allowed</text>
+        <rect x="380" y="92" width="150" height="46" rx="9" fill="#E6EEE4" stroke="#3F6B4A"/><text x="455" y="112" text-anchor="middle" fill="#3F6B4A" font-weight="700">✓ draft replies</text><text x="455" y="128" text-anchor="middle" fill="#4A453B">allowed</text>
+        <rect x="550" y="92" width="150" height="46" rx="9" fill="#F4E9CE" stroke="#B07A16"/><text x="625" y="112" text-anchor="middle" fill="#8a5f12" font-weight="700">🚩 message "John"</text><text x="625" y="128" text-anchor="middle" fill="#4A453B">two Johns — ask</text>
+      </g>
+      <!-- row 2 -->
+      <g stroke="#D8CFBB" stroke-width="2">
+        <line x1="115" y1="138" x2="115" y2="176"/><line x1="285" y1="138" x2="285" y2="176"/><line x1="455" y1="138" x2="455" y2="176"/><line x1="625" y1="138" x2="625" y2="176"/>
+      </g>
+      <g font-family="ui-sans-serif,system-ui" font-size="12">
+        <rect x="40" y="176" width="150" height="46" rx="9" fill="#E6EEE4" stroke="#3F6B4A"/><text x="115" y="196" text-anchor="middle" fill="#3F6B4A" font-weight="700">✓ email me report</text><text x="115" y="212" text-anchor="middle" fill="#4A453B">allowed</text>
+        <rect x="210" y="176" width="150" height="46" rx="9" fill="#F3E2DC" stroke="#A63B27"/><text x="285" y="196" text-anchor="middle" fill="#A63B27" font-weight="700">⛔ pay from email</text><text x="285" y="212" text-anchor="middle" fill="#4A453B">trap — blocked</text>
+        <rect x="380" y="176" width="150" height="46" rx="9" fill="#F4E9CE" stroke="#B07A16"/><text x="455" y="196" text-anchor="middle" fill="#8a5f12" font-weight="700">🚩 refund $54.99</text><text x="455" y="212" text-anchor="middle" fill="#4A453B">you said 54.79 — ask</text>
+        <rect x="550" y="176" width="150" height="46" rx="9" fill="#E6EEE4" stroke="#3F6B4A"/><text x="625" y="196" text-anchor="middle" fill="#3F6B4A" font-weight="700">✓ …35 more</text><text x="625" y="212" text-anchor="middle" fill="#4A453B">allowed</text>
+      </g>
+      <!-- summary -->
+      <rect x="120" y="258" width="480" height="60" rx="12" fill="#FBF8F1" stroke="#2E4A5A"/>
+      <text x="360" y="284" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="14" font-weight="700" fill="#2E4A5A">Flip the dial to "just do it" and walk away.</text>
+      <text x="360" y="305" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="12.5" fill="#4A453B">40 steps · runs the ✓ ones itself · stops at the 3 flags · 0 wrong actions fire</text>
+    </svg>
+    <figcaption>That's the tree: a map of every step in a big task, each marked <span class="tag t-pass">safe</span> <span class="tag t-hold">ask</span> <span class="tag t-block">blocked</span> <em>before</em> anything runs. It does the safe ones on its own and only interrupts you for the flags.</figcaption>
+  </figure>
+
+  <h3>The one subtle rule that makes big tasks possible <em>and</em> safe</h3>
+  <p>In a big task, steps feed each other — and that creates the twin cases below. Same shape, opposite verdict. This is the cleverest part, and the one to be able to say cold:</p>
+  <div class="two">
+    <div class="mini">
+      <div class="top" style="color:#3F6B4A">passes ✓</div>
+      <p style="margin:0 0 6px"><strong>"Email the lead you found."</strong></p>
+      <p style="font-size:14.5px;margin:6px 0;color:#4A453B">Step 1 <em>searched</em> and returned a lead, and showed it to you. That's a <strong>result</strong> (rung 2). It's allowed to become the next step's destination.</p>
+    </div>
+    <div class="mini">
+      <div class="top" style="color:#A63B27">blocks ⛔</div>
+      <p style="margin:0 0 6px"><strong>"Pay the address in that email."</strong></p>
+      <p style="font-size:14.5px;margin:6px 0;color:#4A453B">Step 1 <em>read</em> an email body. That's <strong>read-text</strong> (rung 4). It can fill a message but can <strong>never</strong> become a destination — so paying it is impossible by rule.</p>
+    </div>
+  </div>
+  <div class="callout"><p class="kicker">the whole trick, one line</p><p style="margin:0">A value the assistant <strong>looked up as a result</strong> can be trusted onward; a value it merely <strong>read as text</strong> can never become a destination — no matter how many steps it passes through.</p></div>
+
+  <!-- 10 -->
+  <h2 id="original-vs-new"><span class="num">10</span>Where we started vs. what it became</h2>
+  <div class="two">
+    <div class="mini">
+      <div class="top">the original project</div>
+      <p style="margin:0;font-size:15px;color:#4A453B"><strong>The bodyguard for one action.</strong> Check a single action before it fires: mishears, wrong person, injected destination. This is built and tested — it already answers Jonah's and Kai's asks.</p>
+    </div>
+    <div class="mini">
+      <div class="top">what it became</div>
+      <p style="margin:0;font-size:15px;color:#4A453B"><strong>The bodyguard for a whole autonomous task.</strong> The same check, run across a 40-step tree, so the assistant can safely do big real work while you walk away. This is the capability jump — from "send one email" to "run my morning."</p>
+    </div>
+  </div>
+  <figure>
+    <svg viewBox="0 0 720 120" role="img" aria-label="An arrow from a single checked action to a full checked tree.">
+      <rect x="30" y="42" width="150" height="40" rx="9" fill="#E6EEE4" stroke="#3F6B4A"/><text x="105" y="67" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="13" fill="#3F6B4A">✓ one action</text>
+      <line x1="190" y1="62" x2="300" y2="62" stroke="#2E4A5A" stroke-width="2"/><polygon points="300,62 288,56 288,68" fill="#2E4A5A"/>
+      <text x="245" y="50" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="12" font-style="italic" fill="#8A8272">same check, at scale</text>
+      <g>
+        <rect x="330" y="20" width="90" height="26" rx="6" fill="#E6EEE4" stroke="#3F6B4A"/>
+        <rect x="330" y="52" width="90" height="26" rx="6" fill="#F4E9CE" stroke="#B07A16"/>
+        <rect x="330" y="84" width="90" height="26" rx="6" fill="#E6EEE4" stroke="#3F6B4A"/>
+        <rect x="440" y="36" width="90" height="26" rx="6" fill="#E6EEE4" stroke="#3F6B4A"/>
+        <rect x="440" y="68" width="90" height="26" rx="6" fill="#F3E2DC" stroke="#A63B27"/>
+        <rect x="550" y="52" width="90" height="26" rx="6" fill="#E6EEE4" stroke="#3F6B4A"/>
+        <line x1="420" y1="33" x2="440" y2="49" stroke="#D8CFBB" stroke-width="2"/><line x1="420" y1="97" x2="440" y2="81" stroke="#D8CFBB" stroke-width="2"/><line x1="530" y1="49" x2="550" y2="63" stroke="#D8CFBB" stroke-width="2"/>
+      </g>
+      <text x="585" y="98" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="12" fill="#4A453B">a whole task</text>
+    </svg>
+  </figure>
+
+  <!-- 11 -->
+  <h2 id="recap"><span class="num">11</span>The whole thing in one breath</h2>
+  <div class="card">
+    <p class="oneline">Every action has to show where it came from before it's allowed to happen.</p>
+    <p style="text-align:center;color:var(--ink-soft);max-width:60ch;margin:8px auto 0">A destination must trace to <strong>you</strong>, never to something the AI just read. Across a big task, a result it looked up can hand off to the next step — but read-text can never become a destination. It's a fixed rulebook, not a second AI, and it runs in millionths of a second. That's what lets voice safely go from "send one text" to "run my whole morning."</p>
+  </div>
+  <p style="text-align:center;color:var(--ink-faint);font-family:var(--sans);font-size:13.5px;margin-top:40px">Preflight · the trust layer for voice actions · built for VoiceOS</p>
+
+</div>

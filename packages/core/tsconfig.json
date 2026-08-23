@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "lib": ["ES2023"],
+    "types": [],
+    "outDir": "dist",
+    "rootDir": "src",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+    "erasableSyntaxOnly": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": false
+  },
+  "//strict-note": [
+    "This project's CANONICAL execution + test model is Node native type-stripping (no type",
+    "check at all — see package.json). `build` runs tsc purely to EMIT the dist/ + .d.ts",
+    "consumer artifact; it is deliberately non-strict because the .ts source is authored to the",
+    "type-stripping contract (erasable syntax), not to tsc's strict null / control-flow rules,",
+    "and those source files are owned/frozen (not editable from the build lane). A non-strict",
+    "emit compile is already STRICTER than the canonical zero-check runtime, and still fails on",
+    "real errors (missing imports, bad syntax, non-erasable TS). It just does not gate on",
+    "strictNullChecks pedantry over source it cannot change."
+  ],
+  "include": ["src/**/*.ts"]
+}

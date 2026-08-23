@@ -1,0 +1,266 @@
+{
+  "$format": "preflight-contract-annotations",
+  "version": 1,
+  "catalog": "voiceos",
+  "source": "Modeled from docs/SOLUTION.md (source lattice, flagship checks, money-as-destructive framing) + the VERIFIED VOICEOS INTEGRATION FACTS (main.deob.js). The custom-MCP stdio boundary carries ONLY {name, arguments} (L21045) — it is transcript- and schema-blind, so the exact parameter shapes of native/reminder/Stripe tools are NOT recoverable from the deobfuscated bundle. Every schema_params snapshot below is therefore an ASSUMPTION about the real tool schema (each such param is flagged ASSUMPTION in its note); the provenance/reversibility CLASSIFICATION is the load-bearing, defensible part. tool_names Stripe/iMessage/Apple Mail are demo-real in voiceos.db (SOLUTION.md CORRECTED FACTS); native + reminder tools are representative of the native action set.",
+  "rank_scale": {
+    "4": "transcript_span",
+    "3": "tool_output",
+    "2": "known_state",
+    "1": "screen",
+    "0": "model_composed"
+  },
+  "tools": {
+    "reminder_list": {
+      "tier": 1,
+      "side_effect_free": true,
+      "confirm": false,
+      "note": "Read-only probe used to GROUND reminder_id before reminder_update. tier-1 reads are fail-open (S19.2), not rank-gated — listed here so the min_rank:3 (tool_output) grounding story for reminder_update has a real source.",
+      "schema_params": ["list", "limit"],
+      "params": {
+        "list": { "provenance": "routing", "min_rank": 0, "note": "ASSUMPTION (no schema in main.deob): which reminder list to read; resolved against the account's lists. Not rank-gated at tier 1." },
+        "limit": { "provenance": "routing", "min_rank": 0, "note": "ASSUMPTION: page size on a read." }
+      }
+    },
+
+    "set_volume": {
+      "tier": 2,
+      "side_effect_free": false,
+      "confirm": false,
+      "destructive": false,
+      "reversibility": "reversible",
+      "inverse": {
+        "tool": "set_volume",
+        "status": "built",
+        "note": "Self-inverse: restore the prior level. Clean reversal ONLY if the prior level was captured before the write (known_state) — otherwise there is nothing to restore to. Toggle-grade, unconfirmed by design like the OS volume key."
+      },
+      "inverse_window_s": null,
+      "schema_params": ["level"],
+      "params": {
+        "level": {
+          "provenance": "routing",
+          "min_rank": 4,
+          "note": "ASSUMPTION on name/0-100 range. The how-much param: a spoken number ('set volume to thirty'). min_rank 4 = the amount must come from the transcript; a model-composed or screen-sourced level is the number-twin / injection family. This is the low-stakes reference case for the number-twin check (SOLUTION #3)."
+        }
+      }
+    },
+
+    "control_playback": {
+      "tier": 2,
+      "side_effect_free": false,
+      "confirm": false,
+      "destructive": false,
+      "reversibility": "reversible",
+      "inverse": {
+        "tool": "control_playback",
+        "status": "built",
+        "note": "Self-inverse: play<->pause, next<-previous are their own compensating actions. Playback position residue (a track already advanced) is accepted residue of the reversible class."
+      },
+      "inverse_window_s": null,
+      "schema_params": ["action"],
+      "params": {
+        "action": {
+          "provenance": "routing",
+          "min_rank": 4,
+          "note": "ASSUMPTION: enum play|pause|stop|next|previous. Selects the operation (how) — must be spoken, never inferred from what is on screen. min_rank 4 keeps a screen-read 'skip' button from licensing the routing choice (injection firewall)."
+        }
+      }
+    },
+
+    "open_app": {
+      "tier": 2,
+      "side_effect_free": false,
+      "confirm": false,
+      "destructive": false,
+      "reversibility": "reversible",
+      "inverse": {
+        "tool": "close_app",
+        "status": "unbuilt",
+        "via": "OS app-quit",
+        "note": "Quitting the launched app compensates the launch; close_app is NOT in this catalog (declared-but-unbuilt, S16.x). Launch side effects (an app that fired a background sync on open) are residue."
+      },
+      "inverse_window_s": null,
+      "schema_params": ["app_name"],
+      "params": {
+        "app_name": {
+          "provenance": "routing",
+          "min_rank": 2,
+          "note": "ASSUMPTION on name (could be bundle_id). WHERE the action goes — the target app. min_rank 2 = must at least resolve against installed-apps state (known_state); this blocks a screen-sourced or model-composed app name (rank 0/1) from steering the launch. Ambiguity across installed apps returns candidates -> PF_AMBIGUOUS_TARGET / HOLD, mirroring slack channel resolution."
+        }
+      }
+    },
+
+    "edit_text": {
+      "tier": 2,
+      "side_effect_free": false,
+      "confirm": true,
+      "destructive": false,
+      "reversibility": "compensable",
+      "inverse": {
+        "tool": "edit_text",
+        "status": "built",
+        "note": "Self-compensation: re-write the prior text back. Compensable not reversible because a clean restore requires the prior field snapshot AND an autosave / collaborator / undo-history side effect may already have propagated the intermediate value."
+      },
+      "inverse_window_s": null,
+      "schema_params": ["target", "text", "mode"],
+      "params": {
+        "target": {
+          "provenance": "routing",
+          "min_rank": 2,
+          "note": "ASSUMPTION: the field/element being edited (WHERE). min_rank 2 = must be a grounded UI element (known_state); a target named only by on-screen text must not license the write (injection firewall)."
+        },
+        "text": {
+          "provenance": "content",
+          "taint": "propagate",
+          "note": "ASSUMPTION: the WHAT — the string written into the field. Content, consent-surfaced (SURFACE), never entity-resolved; propagate because it can carry into downstream tool calls."
+        },
+        "mode": {
+          "provenance": "routing",
+          "min_rank": 4,
+          "note": "ASSUMPTION: enum replace|insert|append. Mode flag that changes blast radius (replace clobbers the whole field) — must be spoken, never model-inferred. Declarative today (mirrors slack broadcast)."
+        }
+      }
+    },
+
+    "reminder_create": {
+      "tier": 2,
+      "side_effect_free": false,
+      "confirm": true,
+      "destructive": false,
+      "reversibility": "reversible",
+      "inverse": {
+        "tool": "reminder_delete",
+        "status": "unbuilt",
+        "via": "reminders delete by id",
+        "note": "The create handler returns a reminder id (the exact undo handle); reminder_delete is NOT in this catalog (declared-but-unbuilt). A notification that already fired at the due time would be residue, but pre-due deletion is a clean reversal."
+      },
+      "inverse_window_s": null,
+      "schema_params": ["title", "due", "list"],
+      "params": {
+        "title": {
+          "provenance": "content",
+          "taint": "propagate",
+          "note": "ASSUMPTION: reminder body — the WHAT, stored word-for-word. Content, consent-surfaced."
+        },
+        "due": {
+          "provenance": "routing",
+          "min_rank": 4,
+          "note": "ASSUMPTION: the WHEN. min_rank 4 = the instant must come from the user's words; a model-composed time is the ambiguous_time / time_in_past drift family. A phrase naming no instant should HOLD (missing/ambiguous) rather than default. Mirrors slack_set_reminder.time."
+        },
+        "list": {
+          "provenance": "routing",
+          "min_rank": 2,
+          "note": "ASSUMPTION: which list (WHERE it is filed). min_rank 2 = resolves against the account's lists (known_state); a screen-sourced list name must not steer filing."
+        }
+      }
+    },
+
+    "reminder_update": {
+      "tier": 2,
+      "side_effect_free": false,
+      "confirm": true,
+      "destructive": false,
+      "reversibility": "compensable",
+      "inverse": {
+        "tool": "reminder_update",
+        "status": "built",
+        "note": "Self-compensation: write the prior field values back. Compensable not reversible because a clean restore requires the prior snapshot of every changed field (which must have been captured before the write)."
+      },
+      "inverse_window_s": null,
+      "schema_params": ["reminder_id", "title", "due", "completed"],
+      "params": {
+        "reminder_id": {
+          "provenance": "routing",
+          "min_rank": 3,
+          "derivable_from": "reminder_list result",
+          "note": "ASSUMPTION on name. WHICH reminder — must be grounded in a prior reminder_list (tool_output, rank 3). A model-composed id is PF_UNGROUNDED_ROUTING_PARAM -> HOLD; this is exactly the read-back-before-write discipline (SOLUTION source lattice: PRIOR_TOOL_OUTPUT licenses only if read back)."
+        },
+        "title": {
+          "provenance": "content",
+          "taint": "propagate",
+          "note": "ASSUMPTION: new body text. Content, consent-surfaced."
+        },
+        "due": {
+          "provenance": "routing",
+          "min_rank": 4,
+          "note": "ASSUMPTION: rescheduled WHEN — same rank-4 rule as reminder_create.due."
+        },
+        "completed": {
+          "provenance": "routing",
+          "min_rank": 4,
+          "note": "ASSUMPTION: boolean mark-done flag. A state-changing flag must be spoken, never inferred. Declarative today."
+        }
+      }
+    },
+
+    "stripe_refund": {
+      "tier": 3,
+      "side_effect_free": false,
+      "confirm": true,
+      "destructive": true,
+      "reversibility": "irreversible",
+      "inverse_window_s": null,
+      "note": "MONEY, destructive, irreversible. A processed refund cannot be un-refunded — the only way to reverse economically is a NEW charge, which is a fresh authorized action, not an inverse. No inverse is declared (per S20: irreversible tools carry none). This is the flagship number-twin surface: amount not in the spoken number-set -> PF_AMOUNT_NOT_IN_SPEECH -> HOLD with a money smart-card (SOLUTION check #3, the $54.79->$54.99 worked example).",
+      "schema_params": ["charge_id", "amount", "currency", "reason"],
+      "params": {
+        "charge_id": {
+          "provenance": "routing",
+          "min_rank": 3,
+          "derivable_from": "prior charge lookup",
+          "note": "ASSUMPTION on name (could be payment_intent). WHICH charge — must trace to a prior lookup/tool_output (rank 3), never model-composed. An ungrounded charge id HOLDs (PF_UNGROUNDED_ROUTING_PARAM)."
+        },
+        "amount": {
+          "provenance": "routing",
+          "min_rank": 4,
+          "note": "ASSUMPTION on minor-units vs decimal. THE how-much param and the whole point of the money gate: the refunded amount must be in the transcript number-set (rank 4). 54.99 not in {54.79} is a hard inequality -> HOLD, no tolerance to slip under. Biases to false-negative, never fabricates a catch (SOLUTION #3)."
+        },
+        "currency": {
+          "provenance": "routing",
+          "min_rank": 3,
+          "derivable_from": "charge_id",
+          "note": "ASSUMPTION: the charge's currency (WHERE/how-much unit). Should derive from the resolved charge (tool_output, rank 3), not be spoken or composed; a mismatched currency is a routing discrepancy."
+        },
+        "reason": {
+          "provenance": "content",
+          "taint": "none",
+          "note": "ASSUMPTION: Stripe refund reason enum/metadata string. Content — does not steer who/where/how-much, so it does not gate routing; taint none (bounded enum, not free text propagated downstream)."
+        }
+      }
+    },
+
+    "stripe_transfer": {
+      "tier": 3,
+      "side_effect_free": false,
+      "confirm": true,
+      "destructive": true,
+      "reversibility": "irreversible",
+      "inverse_window_s": null,
+      "note": "MONEY, destructive, irreversible. A completed transfer to a connected account cannot be clawed back by an inverse tool — recovery requires a separate transfer back, a fresh authorized action. No inverse declared. Both the destination (who) and amount (how-much) are high-stakes routing params: destination sourced from screen/content is the injection firewall's worst case (redirecting money to an attacker's account read off an email) -> PF_INJECTION_ROUTING_FROM_CONTENT -> BLOCK.",
+      "schema_params": ["destination", "amount", "currency", "description"],
+      "params": {
+        "destination": {
+          "provenance": "routing",
+          "min_rank": 3,
+          "derivable_from": "connected-account lookup",
+          "note": "ASSUMPTION on name (acct_ id). WHO gets the money — must trace to a grounded connected-account (tool_output/known_state, rank 3), NEVER to on-screen or email content (rank 1). This is the canonical injection-firewall routing target: a destination licensed only by screen/content -> BLOCK, not HOLD."
+        },
+        "amount": {
+          "provenance": "routing",
+          "min_rank": 4,
+          "note": "ASSUMPTION on minor-units. how-much — must be in the spoken number-set (rank 4); number-twin / magnitude check applies exactly as in stripe_refund."
+        },
+        "currency": {
+          "provenance": "routing",
+          "min_rank": 2,
+          "derivable_from": "destination",
+          "note": "ASSUMPTION: transfer currency (unit). Derives from the destination account / known state (rank 2); not spoken, not composed."
+        },
+        "description": {
+          "provenance": "content",
+          "taint": "propagate",
+          "note": "ASSUMPTION: free-text transfer memo — the WHAT. Content, consent-surfaced; propagate because free text can carry into downstream records/tools."
+        }
+      }
+    }
+  }
+}

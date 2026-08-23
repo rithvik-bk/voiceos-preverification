@@ -1,0 +1,29 @@
+{
+  "name": "@preflight/contracts",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Declarative tool contracts (SPEC S20): the annotation format, the CI lint that fails unannotated Tier 2/3 writes, and the coverage number. Zero runtime deps, zero installs.",
+  "//build-choice": [
+    "Plain .mjs, zero dependencies of any kind — `npm test` runs from a clean checkout with",
+    "no node_modules. Same constraint discipline as @preflight/core (KICKOFF rules 6+7)."
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "exports": {
+    "./lint": "./src/lint.mjs",
+    "./catalogs/slack": "./catalogs/slack.annotations.json"
+  },
+  "files": [
+    "src",
+    "catalogs",
+    "FORMAT.md"
+  ],
+  "//run-model": "Pure-JS (.mjs) lint tool + JSON annotation catalog — no TypeScript, nothing to compile. `build` syntax-checks the shipped tool (node --check); `lint`/`test` run the real catalog validation.",
+  "scripts": {
+    "build": "node --check src/lint.mjs",
+    "test": "node --test 'test/**/*.test.mjs' && node src/lint.mjs catalogs/slack.annotations.json",
+    "lint": "node src/lint.mjs catalogs/slack.annotations.json"
+  }
+}

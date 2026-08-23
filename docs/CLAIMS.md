@@ -1,0 +1,17 @@
+# CLAIMS — every assertion maps to a test id or is UNMEASURED
+| # | Claim | Evidence | Status |
+|---|---|---|---|
+| C1 | 50/50 injected drifts caught (5 families) | `universal-voiceos-oauth/tools/preflight-eval.mjs` run | MEASURED (self-generated corpus — closed world, label it as such) |
+| C2 | 0/6 correct calls falsely blocked | same harness | MEASURED (tiny n — say so) |
+| C3 | 0.24ms mean in-path gate cost | same harness | MEASURED (arithmetic only; p95/p99 incl. re-verify UNMEASURED) |
+| C4 | 427 tests green, zero LLM in gate path | `cd ~/preflight/vendor/uvo && npm test` (vendored snapshot @19d706b) | MEASURED 2026-08-21: 427/427, exit 0 (416 baseline + 2 screen-drift + 9 injection-negative) |
+| C5 | Held-out blind adversarial catch rate | — | UNMEASURED |
+| C6 | False-block rate on real traffic | — | UNMEASURED |
+| C7 | Baseline WAR on live traffic | — | UNMEASURED (shadow mode produces it) |
+| C8 | §13 screen-drift transition policy catches the stale-screen end-time drift (simulated surface buffer, REAL gate verdict) and passes the stable-surface case | `cd ~/preflight/vendor/uvo && node tools/screen-drift-fixture.mjs` (suite 427/427) | MEASURED 2026-08-21 (harness-proven; surface buffer simulated — labeled as such) |
+| C9 | Tool-read message-body text NEVER becomes a grounded routing referent (injection firewall, S11/I3); body-sourced name/mention/email destinations are blocked, real send never fires | `~/preflight/vendor/uvo/engine/test/injection-negative.test.ts` (9 tests) | MEASURED 2026-08-21 (behavioural: chat.postMessage never called) |
+| C10 | packages/core enforces S11.2 transcript-span licensing (all 3 arms: literally-spoken, RRP-resolved-from-spoken-descriptor per S10.3, card-tap): body-sourced NEW destination blocks `provenance_mismatch`; spoken OR spoken-descriptor→resolved-id passes; rank-3 read referent stays a valid reply target; injection block preserved | `cd ~/preflight/packages/core && node --test 'test/**/*.test.ts'` (16 tests) | MEASURED 2026-08-21 |
+| C12 | Blind adversarial corpus (40 cases, spec-only author, committed before first run): after the S10.3 RRP fix, runnable false-block dropped 5/5→1/5; the remaining B38 is a separate named gap (tier-blind lattice), not a regression | `cd ~/preflight/packages/eval && node src/cli.ts --timestamp <ts>` | MEASURED 2026-08-21 (runnable subset 5/40; 35 not-runnable-yet, capabilities named) |
+| C13 | Replay corpus (their community-reported bugs as fixtures): 5/5 runnable caught, machine codes matched; R1 calendar headline demonstrated via the separate §13 fixture (C8) | same eval runner | MEASURED 2026-08-21 (5 verbatim + 6 reconstructed; R1 NR in pure eval path) |
+| C11 | Contracts lint: 100% write-tool annotation coverage, fails on unannotated param / missing inverse / undeclared tier | `cd ~/preflight/packages/contracts && npm test` (13 tests) | MEASURED 2026-08-21: COVERAGE 100.0%, PASS |
+| ⚠️ SEC1 | KNOWN GAP (not a claim of safety): the deployed send path's `resolveConversation` tier-0 raw-ID passthrough trusts any well-formed Slack id shape (`/^[CGD][A-Z0-9]{4,}$/`) with no membership check — a raw `C…` id copied from a message body CAN launder into a real send. Not reachable via names/mentions/emails. S11.2 in packages/core closes it; the DEPLOYED integration does not yet. | `injection-negative.test.ts` test 5 pins the current behaviour green | MEASURED 2026-08-21 — DEMO RULE: never invite a live "paste a raw channel id" attack on the deployed app |

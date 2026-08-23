@@ -1,0 +1,41 @@
+{
+  "name": "@preflight/core",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Preflight gate core — provenance lattice, grounding store, verdicts, receipts, shadow mode. Zero runtime deps, zero LLM, zero network.",
+  "//build-choice": [
+    "BUILD CHOICE (Phase 2 walking skeleton, STAFF-ENG): plain `node` running .ts files",
+    "directly via native type stripping (default-on since Node 23.6; verified on v24.14.0).",
+    "No tsc, no tsx, no ts-node, no node_modules AT ALL: `npm test` works from a clean",
+    "checkout with zero installs. Constraint accepted in exchange: erasable-TS syntax only",
+    "(no enums, no namespaces, no constructor parameter properties) — which the ported",
+    "universal-voiceos-oauth gate code already satisfies.",
+    "KICKOFF rules 6+7 (zero runtime deps, zero LLM/network in the gate path) are enforced",
+    "by test/enforcement.test.ts, which fails the build if either ever regresses."
+  ],
+  "engines": {
+    "node": ">=23.6"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test 'test/**/*.test.ts'",
+    "bench": "node bench/bench.ts",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}
