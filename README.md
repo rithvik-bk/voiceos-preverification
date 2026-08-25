@@ -25,6 +25,8 @@ Start in OBSERVE, run your own traffic, read the log, then decide.
 
 ## Understand more
 
+- [AGENTS.md](AGENTS.md): step-by-step install and wiring instructions, written so an AI agent can do the whole setup for you.
+
 - [PREFLIGHT-EXPLAINED](docs/PREFLIGHT-EXPLAINED.md): the full concept, from zero, with every design decision argued.
 - [EDGE-CASES](docs/EDGE-CASES.md): the concrete, reproducible cases the gate catches, on real app action shapes.
 - [THREATMODEL](docs/THREATMODEL.md): what an attacker can try and why the type system stops it.
