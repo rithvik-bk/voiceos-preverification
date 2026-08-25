@@ -52,7 +52,7 @@ The jaw-drop is the capability: **a voice agent just did your entire morning's w
 - **WF-2 receipt + drift-map** *(1 agent)* — `core/src/receipt.ts` aggregation + a drift-map summarizer over receipts/eval; tests. DoD: green + a sample drift map from real corpus data.
 - **WF-3 adapter plan-verification** *(1 agent)* — `verifyPlan()` + per-step OBSERVE/ENFORCE runtime + receipts; README wiring (DAG engine, OBSERVE→ENFORCE). DoD: adapter tests green (7 + verifyPlan cases).
 - **WF-4 "The Unlock" demo** *(1 agent)* — `demo/autonomy.mjs` (deterministic) + `demo/autonomy.html` (self-contained proof-tree, taint edge highlighted, the without/with split), on top of the built demo. DoD: two runs diff-clean; html offline.
-- **WF-5 adversary + integrator** *(2 agents)* — break the taint firewall (laundering/confused-deputy/read-back-spoof), find over-holds + overclaims + hardest Jonah/Kai questions; clean-checkout verify with real evidence.
+- **WF-5 adversary + integrator** *(2 agents)* — break the taint firewall (laundering/confused-deputy/read-back-spoof), find over-holds + overclaims + the hardest reviewer questions; clean-checkout verify with real evidence.
 
 Sequence: WF-1 → (WF-2 ∥ WF-3 ∥ WF-4) → WF-5. ~6 agents.
 

@@ -1,7 +1,8 @@
-node_modules/
-vendor/
+.claude/
 .DS_Store
 *.log
 /private/
+docs/THE-MEETING.md docs/PREFLIGHT-PITCH.md docs/FOUNDER-BRIEF.md docs/KICKOFF.md docs/PLAN.md docs/STATE.md docs/RESUME.md docs/DEMO-READY.md docs/briefs docs/pods docs/decisions
+node_modules/
 trace.json
-.claude/
+vendor/
