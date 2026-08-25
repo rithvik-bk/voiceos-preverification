@@ -2,7 +2,19 @@
 .DS_Store
 *.log
 /private/
-docs/THE-MEETING.md docs/PREFLIGHT-PITCH.md docs/FOUNDER-BRIEF.md docs/KICKOFF.md docs/PLAN.md docs/STATE.md docs/RESUME.md docs/DEMO-READY.md docs/briefs docs/pods docs/decisions
+docs/AUDIT.md
+docs/briefs
+docs/decisions
+docs/DEMO-READY.md
+docs/FOUNDER-BRIEF.md
+docs/KICKOFF.md
+docs/PLAN.md
+docs/pods
+docs/PREFLIGHT-PITCH.md
+docs/RESUME.md
+docs/SOLUTION.md
+docs/STATE.md
+docs/THE-MEETING.md
 node_modules/
 trace.json
 vendor/
