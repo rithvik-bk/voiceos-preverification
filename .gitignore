@@ -4,3 +4,4 @@ vendor/
 *.log
 /private/
 trace.json
+.claude/

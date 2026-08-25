@@ -1,5 +1,5 @@
 # PREFLIGHT — THE EDGE-CASE CATALOG
-*The proof surface for Jonah & Kai. Every case is REAL, reproducible, and built on the actual action/parameter shape of the named app. Where an exact field name is not certain from public API knowledge it is tagged **ASSUMPTION** with what to verify.*
+*The proof surface. Every case is REAL, reproducible, and built on the actual action/parameter shape of the named app. Where an exact field name is not certain from public API knowledge it is tagged **ASSUMPTION** with what to verify.*
 
 *Apps integrated: Stripe · ClickUp · Zoom · GitHub · Instagram · LinkedIn. Instagram & LinkedIn are posting-only + irreversible → Tier 3 unconditional (§16). Slack is retired from this plan and appears nowhere.*
 
