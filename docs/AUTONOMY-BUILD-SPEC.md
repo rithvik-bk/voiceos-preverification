@@ -25,8 +25,8 @@ The jaw-drop is the capability: **a voice agent just did your entire morning's w
 | Capability multiplier / raise the ceiling | The Unlock demo — 40-step task safely done |
 | Autonomous multi-step touching real things | Proof-tree + autonomy dial |
 | Injection defense that scales with autonomy | The Taint Firewall (IFC) |
-| Jonah's $54.79→$54.99 | One of the 3 live holds |
-| Jonah's error-handling UX (his #1) | The spoken repair on each hold, rides their existing revise loop |
+| The reported $54.79→$54.99 miss | One of the 3 live holds |
+| The error-handling UX requirement (their #1) | The spoken repair on each hold, rides their existing revise loop |
 | Kai's harness, no AI grading AI | The corpora + deterministic gate prove every verdict |
 | Enterprise trust | The Receipt audit trail (they can't produce it) |
 | The moat | Drift map + annotation library flywheel |
